@@ -27,6 +27,13 @@ jobs:
           --python dist\win\copyparty-media-wall\app\python\python.exe
           --app dist\win\copyparty-media-wall\app
           --ffmpeg
+      - name: Same test with copyparty logging on (diagnostics)
+        if: always()
+        run: >
+          dist\win\copyparty-media-wall\app\python\python.exe windows\smoke_test.py
+          --python dist\win\copyparty-media-wall\app\python\python.exe
+          --app dist\win\copyparty-media-wall\app
+          --debug
       - name: Check the launcher starts the helper
         shell: pwsh
         run: |

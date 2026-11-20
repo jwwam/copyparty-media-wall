@@ -18,6 +18,7 @@ for _s in (sys.stdout, sys.stderr):  # Windows consoles default to a legacy code
 ap = argparse.ArgumentParser()
 ap.add_argument("--python", required=True)
 ap.add_argument("--app", required=True)
+ap.add_argument("--debug", action="store_true", help="keep copyparty's own logging on")
 ap.add_argument("--ffmpeg", action="store_true", help="also download FFmpeg through the helper and check video covers")
 A = ap.parse_args()
 A.app = os.path.abspath(A.app)
@@ -31,7 +32,9 @@ os.makedirs(os.path.join(media, "照片 photos"))
 os.makedirs(os.path.join(media, "docs"))
 with open(os.path.join(media, "docs", "note.txt"), "w", encoding="utf-8") as f:
     f.write("hello from the smoke test")
-env = dict(os.environ, WALL_DEBUG="1", WALL_CFG=cfg, WALL_HELPER_PORT=str(HP), WALL_PORT=str(CP), PYTHONPATH=os.path.join(A.app, "pylib"))
+env = dict(os.environ, WALL_CFG=cfg, WALL_HELPER_PORT=str(HP), WALL_PORT=str(CP), PYTHONPATH=os.path.join(A.app, "pylib"))
+if A.debug:
+    env["WALL_DEBUG"] = "1"
 fails = []
 
 
