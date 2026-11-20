@@ -7,13 +7,14 @@
 <text x="500.0" y="68" text-anchor="middle" fill="#eef1f6" font-size="17" font-weight="700">One computer at home</text>
 <rect x="724" y="34" width="250" height="330" rx="18" fill="#171b24" stroke="#2a303c" stroke-width="1.5"/>
 <text x="849.0" y="68" text-anchor="middle" fill="#eef1f6" font-size="17" font-weight="700">Any browser, no app needed</text>
-<rect x="46" y="100" width="210" height="52" rx="12" fill="#1f2430"/><path d="M60 114a5 5 0 0 1 5-5h11l6 7h19a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H65a5 5 0 0 1-5-5z" fill="#ff8a3d" fill-opacity=".22" stroke="#ff8a3d" stroke-width="2"/>
-<text x="122" y="132" fill="#dfe4ee" font-size="15" font-weight="600">Movies and shows</text>
-<rect x="46" y="166" width="210" height="52" rx="12" fill="#1f2430"/><path d="M60 180a5 5 0 0 1 5-5h11l6 7h19a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H65a5 5 0 0 1-5-5z" fill="#5ab0ff" fill-opacity=".22" stroke="#5ab0ff" stroke-width="2"/>
-<text x="122" y="198" fill="#dfe4ee" font-size="15" font-weight="600">Photos</text>
-<rect x="46" y="232" width="210" height="52" rx="12" fill="#1f2430"/><path d="M60 246a5 5 0 0 1 5-5h11l6 7h19a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H65a5 5 0 0 1-5-5z" fill="#7ddc8f" fill-opacity=".22" stroke="#7ddc8f" stroke-width="2"/>
-<text x="122" y="264" fill="#dfe4ee" font-size="15" font-weight="600">Music</text>
-<text x="151" y="336" text-anchor="middle" fill="#8b94a6" font-size="13">Files stay where they are</text>
+<rect x="46" y="94" width="210" height="48" rx="12" fill="#1f2430"/><path d="M60 106a5 5 0 0 1 5-5h11l6 7h19a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H65a5 5 0 0 1-5-5z" fill="#ff8a3d" fill-opacity=".22" stroke="#ff8a3d" stroke-width="2"/>
+<text x="122" y="124" fill="#dfe4ee" font-size="15" font-weight="600">Movies and shows</text>
+<rect x="46" y="150" width="210" height="48" rx="12" fill="#1f2430"/><path d="M60 162a5 5 0 0 1 5-5h11l6 7h19a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H65a5 5 0 0 1-5-5z" fill="#5ab0ff" fill-opacity=".22" stroke="#5ab0ff" stroke-width="2"/>
+<text x="122" y="180" fill="#dfe4ee" font-size="15" font-weight="600">Photos</text>
+<rect x="46" y="206" width="210" height="48" rx="12" fill="#1f2430"/><path d="M60 218a5 5 0 0 1 5-5h11l6 7h19a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H65a5 5 0 0 1-5-5z" fill="#7ddc8f" fill-opacity=".22" stroke="#7ddc8f" stroke-width="2"/>
+<text x="122" y="236" fill="#dfe4ee" font-size="15" font-weight="600">Music</text>
+<rect x="46" y="262" width="210" height="48" rx="12" fill="#1f2430"/><path d="M66 270h16l9 9v23h-25z" fill="#c9a7ff" fill-opacity=".22" stroke="#c9a7ff" stroke-width="2" stroke-linejoin="round"/><path d="M82 270v9h9" fill="none" stroke="#c9a7ff" stroke-width="2" stroke-linejoin="round"/><text x="122" y="292" fill="#dfe4ee" font-size="15" font-weight="600">Any other files</text>
+<text x="151" y="344" text-anchor="middle" fill="#8b94a6" font-size="13">Files stay where they are</text>
 <rect x="356" y="92" width="288" height="66" rx="14" fill="#231a14" stroke="url(#acc)" stroke-width="2"/>
 <rect x="372" y="107" width="36" height="36" rx="10" fill="url(#acc)"/><path d="M385 116v18l15-9z" fill="#14100c"/>
 <text x="420" y="121" fill="#ffffff" font-size="17" font-weight="700">Media Wall</text><text x="420" y="143" fill="#ffc49b" font-size="12.5">this project · the pages you see</text>

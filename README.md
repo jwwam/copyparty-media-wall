@@ -8,7 +8,7 @@
 
 ![How it fits together: your media folders, one computer running copyparty and Media Wall, and any browser on the network](docs/overview.en.svg)
 
-**In one sentence:** point it at the folders that hold your films, photos and music on one computer, and every computer, phone and tablet on your network gets a media library in the browser — nothing to install on them.
+**In one sentence:** point it at the folders that hold your films, photos, music and any other files on one computer, and every computer, phone and tablet on your network gets a media library and a shared file space in the browser — nothing to install on them.
 
 ![Four videos playing at the same time inside one page](docs/shots/multi-video.gif)
 
@@ -24,6 +24,7 @@
 - **English and 中文** — switch with the button at the top right.
 - **Records follow the file** — each watched or favourited file gets a fingerprint (exact size + SHA-256 of its head, middle and tail). Rename it, move it, or switch libraries, and its progress and favourite are matched back automatically.
 - **Export / import** watch history and favourites as a JSON file.
+- **File sharing on your network** — it is still a file server underneath: every kind of file in the shared folders can be browsed, opened and downloaded from any device, whole folders download as a zip, and with read-write access other devices can upload into them. Handy for getting files between a phone and a computer.
 - **File management** — new folder, upload (drag and drop), rename, move, copy, delete, zip download, multi-select, right-click menu.
 - **Several libraries** side by side, each a folder on disk.
 - **Local artwork** — put `Movie.jpg` next to `Movie.mp4` and it becomes the cover.
@@ -46,6 +47,18 @@ This is the part that file servers and most media libraries do not do: playback 
 ![Players shrunk to the corner while browsing](docs/shots/en/multi-mini.jpg)
 
 Each window has previous / next, details, shrink, fill-page, fullscreen and close. The dock at the bottom tiles the windows, toggles between "sound from the active window only" and "sound from all", and pauses or closes everything at once.
+
+## Also a shared file space
+
+The wall is the friendly face, but the folders you share are shared as files too, not only as a media library:
+
+- **Any file type.** Documents, archives, installers and everything else show up under **Folders** next to the media, with size and date, and open or download with a click.
+- **Download** single files, several selected files, or a whole folder as one zip.
+- **Upload from any device** by dragging files onto the page or with the Upload button — for example, send photos from a phone straight into a folder on the computer.
+- **Organise** with new folders, rename, move and copy, across libraries.
+- **One password** protects everything; choose read-only or read-write when you start the service.
+
+What it does not do yet: public share links for a single file or folder (a link you can send to someone who has no password). copyparty itself can do that; this front end does not expose it.
 
 ## More screenshots
 
