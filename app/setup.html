@@ -139,10 +139,10 @@ function browse() {
       let j; try { j = await api('/api/ls?path=' + encodeURIComponent(p || '')); } catch (e) { return; }
       cur = j.path;
       $('.path', m).textContent = j.path;
-      $('.quick', m).innerHTML = j.quick.map(q => `<button data-p="${esc(q.p)}">${L(...(QUICK[q.k] || [q.k, q.k]))}</button>`).join('');
+      $('.quick', m).innerHTML = j.quick.map(q => `<button data-p="${esc(q.p)}">${q.n ? esc(q.n) : L(...(QUICK[q.k] || [q.k, q.k]))}</button>`).join('');
       $('.br', m).innerHTML = (j.parent ? `<button data-p="${esc(j.parent)}">${FOLDER}<span>.. ${L('上一级', 'Up')}</span></button>` : '') +
-        (j.error === 'denied' ? `<p>${L('没有权限读取这个文件夹。如果系统弹出了授权窗口，请点「允许」后再试。', 'No permission to read this folder. If macOS asked for access, allow it and try again.')}</p>`
-          : j.dirs.length ? j.dirs.map(n => `<button data-p="${esc(j.path.replace(/\/$/, '') + '/' + n)}">${FOLDER}<span>${esc(n)}</span></button>`).join('')
+        (j.error === 'denied' ? `<p>${L('没有权限读取这个文件夹。如果系统弹出了授权窗口，请点「允许」后再试。', 'No permission to read this folder. If the system asked for access, allow it and try again.')}</p>`
+          : j.dirs.length ? j.dirs.map(d => `<button data-p="${esc(d.p)}">${FOLDER}<span>${esc(d.n)}</span></button>`).join('')
           : `<p>${L('这里没有子文件夹', 'No subfolders here')}</p>`);
     };
     m.addEventListener('click', e => {
@@ -169,7 +169,7 @@ const ffText = j => j.state === 'busy' ? L('正在下载… ', 'Downloading… '
 /* ---------- first-run wizard ---------- */
 function wizard() {
   if (!draft) draft = { user: st.user || '', password: '', password2: '', folders: st.folders.slice(), perm: st.perm || 'r' };
-  const needFF = st.mac && !st.ffmpeg, total = needFF ? 4 : 3;
+  const needFF = !!st.ffmpeg_dl && !st.ffmpeg, total = needFF ? 4 : 3;
   const bars = `<div class="steps">${Array.from({ length: total }, (_, i) => `<i class="${i < step ? 'on' : ''}"></i>`).join('')}</div>`;
   let h = '';
   if (step === 1) h = `<h2>${L('1. 设置登录账号', '1. Create the login')}</h2><p>${L('其他设备访问影音库时要输入这个密码。', 'Other devices enter this password to open the library.')}</p>
@@ -180,7 +180,7 @@ function wizard() {
   else if (step === 2) h = `<h2>${L('2. 选择媒体文件夹', '2. Choose your media folders')}</h2><p>${L('影音库会扫描这些文件夹里的视频、图片、音乐和其他文件。文件留在原处，不会被移动。', 'The wall scans these folders for videos, images, music and other files. Files stay where they are.')}</p>
     ${folderList(draft.folders)}<div class="acts" style="justify-content:flex-start;margin-top:12px"><button class="btn sm" data-a="add">＋ ${L('添加文件夹', 'Add a folder')}</button></div>`;
   else if (step === 3) h = `<h2>${L('3. 其他设备能做什么', '3. What other devices may do')}</h2><p>${L('之后可以随时在这个页面修改。', 'You can change this later on this page.')}</p>${permOpts(draft.perm)}`;
-  else h = `<h2>${L('4. 视频封面（可选）', '4. Video covers (optional)')}</h2><p>${L('要显示视频和音乐的封面图，需要 FFmpeg 组件（约 60 MB，只需下载一次）。它来自第三方构建站点 ffmpeg.martin-riedl.de，因为 FFmpeg 官方不提供 macOS 的现成程序。', 'Covers for videos and music need FFmpeg (about 60 MB, downloaded once). It comes from the third-party build site ffmpeg.martin-riedl.de, because FFmpeg does not publish macOS binaries itself.')}</p>
+  else h = `<h2>${L('4. 视频封面（可选）', '4. Video covers (optional)')}</h2><p>${L('要显示视频和音乐的封面图，需要 FFmpeg 组件（约 ' + st.ffmpeg_dl.mb + ' MB，只需下载一次）。它来自第三方构建 ' + st.ffmpeg_dl.src + '，因为 FFmpeg 官方只发布源代码，不提供现成程序。', 'Covers for videos and music need FFmpeg (about ' + st.ffmpeg_dl.mb + ' MB, downloaded once). It comes from the third-party build at ' + st.ffmpeg_dl.src + ', because the FFmpeg project itself only publishes source code.')}</p>
     <div class="bar"><i style="width:${st.ffmpeg ? 100 : st.ffmpeg_job.pct}%"></i></div><p class="hint" id="ffm">${st.ffmpeg ? L('已安装', 'Installed') : ffText(st.ffmpeg_job)}</p>`;
   const ffBusy = st.ffmpeg_job.state === 'busy';
   root.innerHTML = `<div class="card">${bars}${h}<div class="err" id="err"></div><div class="acts">
@@ -201,7 +201,7 @@ function dash() {
   root.innerHTML = `<div class="card">
       <div class="kv"><div class="stat"><i class="dot ${stat[1]}"></i>${stat[0]}</div><div class="sp"></div>
         ${st.running ? `<button class="btn sm" data-a="restart"${busy ? ' disabled' : ''}>${L('重启', 'Restart')}</button><button class="btn sm bad" data-a="stop"${busy ? ' disabled' : ''}>${L('停止', 'Stop')}</button>` : `<button class="btn sm acc" data-a="start"${busy ? ' disabled' : ''}>${L('启动', 'Start')}</button>`}</div>
-      ${sj.state === 'error' ? `<div class="err">${L('启动失败，请查看日志 ~/Library/Logs/copyparty.log', 'Could not start; see the log at ~/Library/Logs/copyparty.log')}</div>` : ''}
+      ${sj.state === 'error' ? `<div class="err">${L('启动失败，请查看日志 ', 'Could not start; see the log at ')}${esc(st.log)}</div>` : ''}
       ${st.running ? `<div class="acts" style="justify-content:flex-start"><a class="btn acc" href="${esc(st.local)}" target="_blank" rel="noopener">▶ ${L('打开影音库', 'Open the library')}</a></div>
         <div class="addr"><small>${L('这台电脑', 'This computer')}</small><code>${esc(st.local)}</code><button class="btn sm" data-copy="${esc(st.local)}">${L('复制', 'Copy')}</button></div>
         ${st.lan ? `<div class="addr"><small>${L('其他设备', 'Other devices')}</small><code>${esc(st.lan)}</code><button class="btn sm" data-copy="${esc(st.lan)}">${L('复制', 'Copy')}</button></div><p class="hint">${L('同一个 Wi-Fi 或局域网里的手机、平板、电脑，用浏览器打开「其他设备」的地址，输入密码即可。', 'Phones, tablets and computers on the same Wi-Fi or LAN open the "other devices" address in a browser and enter the password.')}</p>`
@@ -214,8 +214,8 @@ function dash() {
       <label>${L('用户名', 'Username')}</label><input type="text" id="u" value="${esc(draft.user)}" spellcheck="false" autocomplete="username">
       <label>${L('新密码', 'New password')}</label><input type="password" id="p1" value="${esc(draft.password)}" autocomplete="new-password">
       <label>${L('再输入一次新密码', 'Repeat the new password')}</label><input type="password" id="p2" value="${esc(draft.password2)}" autocomplete="new-password"></div>
-    ${st.mac ? `<div class="card"><h2>${L('视频封面组件（FFmpeg）', 'Video covers (FFmpeg)')}</h2>
-      ${st.ffmpeg ? `<p style="margin:0;color:var(--ok)">✓ ${L('已安装', 'Installed')}</p>` : `<p>${L('没有它，视频和音乐只显示文字色块。下载约 60 MB，来自第三方构建站点 ffmpeg.martin-riedl.de。', 'Without it videos and music show a plain tile. About 60 MB, from the third-party build site ffmpeg.martin-riedl.de.')}</p>
+    ${st.ffmpeg_dl || st.ffmpeg ? `<div class="card"><h2>${L('视频封面组件（FFmpeg）', 'Video covers (FFmpeg)')}</h2>
+      ${st.ffmpeg ? `<p style="margin:0;color:var(--ok)">✓ ${L('已安装', 'Installed')}</p>` : `<p>${L('没有它，视频和音乐只显示文字色块。下载约 ' + st.ffmpeg_dl.mb + ' MB，来自第三方构建 ' + st.ffmpeg_dl.src + '。', 'Without it videos and music show a plain tile. About ' + st.ffmpeg_dl.mb + ' MB, from the third-party build at ' + st.ffmpeg_dl.src + '.')}</p>
         <div class="bar"><i style="width:${st.ffmpeg_job.pct}%"></i></div><p class="hint">${ffText(st.ffmpeg_job)}</p>
         <div class="acts" style="justify-content:flex-start"><button class="btn sm acc" data-a="ff"${st.ffmpeg_job.state === 'busy' ? ' disabled' : ''}>${L('下载', 'Download')}</button></div>`}</div>` : ''}
     <div class="card" id="savebar"${dirty ? '' : ' hidden'}><div class="kv"><b>${L('有未保存的修改', 'You have unsaved changes')}</b><div class="sp"></div><button class="btn" data-a="revert">${L('放弃', 'Discard')}</button><button class="btn acc" data-a="apply">${L('保存并重启服务', 'Save and restart')}</button></div><div class="err" id="err"></div></div>`;
@@ -223,7 +223,7 @@ function dash() {
 
 function render() { if (!st) return; head(); if (st.configured && !window.__wiz) dash(); else wizard(); }
 async function refresh(soft) {
-  try { st = await api('/api/status'); } catch (e) { root.innerHTML = `<div class="card"><h2>${L('连接不上管理程序', 'Cannot reach the helper')}</h2><p>${L('请重新双击 Copyparty 图标。', 'Double-click the Copyparty app again.')}</p></div>`; return; }
+  try { st = await api('/api/status'); } catch (e) { root.innerHTML = `<div class="card"><h2>${L('连接不上管理程序', 'Cannot reach the helper')}</h2><p>${L('请重新打开影音库应用。', 'Start the Media Wall app again.')}</p></div>`; return; }
   const typing = document.activeElement && document.activeElement.tagName === 'INPUT';
   if (!(soft && typing) && !$('.modal')) { keep(); render(); }
   clearTimeout(pollT);

@@ -1,0 +1,45 @@
+name: Windows package
+
+on:
+  push:
+    branches: [main]
+    paths: ["app/**", "web/**", "windows/**", ".github/workflows/windows.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: x64
+      - name: Build the package
+        run: python windows/build.py
+      - name: Smoke-test the package with its own Python
+        run: >
+          dist\win\copyparty-media-wall\app\python\python.exe windows\smoke_test.py
+          --python dist\win\copyparty-media-wall\app\python\python.exe
+          --app dist\win\copyparty-media-wall\app
+          --ffmpeg
+      - name: Check the launcher starts the helper
+        shell: pwsh
+        run: |
+          $env:WALL_CFG = "$env:RUNNER_TEMP\wall cfg"
+          $env:WALL_HELPER_PORT = "39350"
+          $env:BROWSER = "echo"
+          & "dist\win\copyparty-media-wall\app\python\python.exe" "dist\win\copyparty-media-wall\app\launch.py"
+          $r = Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:39350/api/ping"
+          Write-Host $r.Content
+          if ($r.Content -notmatch "helper-") { exit 1 }
+          Get-Content "$env:WALL_CFG\helper.pid" | ForEach-Object { Stop-Process -Id $_ -Force }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: copyparty-media-wall-windows
+          path: dist/copyparty-media-wall-windows.zip
+          if-no-files-found: error

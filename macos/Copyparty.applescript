@@ -1,7 +1,7 @@
 -- Double-click launcher: starts the setup helper in the background and opens its page in the browser.
 -- Everything else (password, folders, FFmpeg, start / stop) happens on that page.
 property helperPort : "3924"
-property helperVer : "helper-1"
+property helperVer : "helper-2"
 
 on findPython()
 	try

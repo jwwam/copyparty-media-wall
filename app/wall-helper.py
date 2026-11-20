@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Setup and control helper for copyparty-media-wall.
+"""Setup and control helper for copyparty-media-wall (macOS, Windows, Linux).
 
 Serves a setup page on this computer only (127.0.0.1) and does what a web page
 cannot do on its own: pick folders on disk, write the copyparty config, fetch
 FFmpeg, and start or stop copyparty. Standard library only.
 """
-import json, os, platform, re, secrets, signal, socket, subprocess, sys, tempfile, threading, time, zipfile
+import json, os, platform, re, secrets, signal, socket, string, subprocess, sys, tempfile, threading, time, zipfile
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
-VERSION = "helper-1"
+VERSION = "helper-2"
 HERE = os.path.dirname(os.path.abspath(__file__))
 PORT = int(os.environ.get("WALL_HELPER_PORT", "3924"))
 CPP_PORT = int(os.environ.get("WALL_PORT", "3923"))
 MAC = sys.platform == "darwin"
+WIN = os.name == "nt"
 CFG = os.environ.get("WALL_CFG") or (
     os.path.expanduser("~/Library/Application Support/copyparty") if MAC
     else os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~/.config"), "copyparty-media-wall"))
@@ -25,9 +26,16 @@ PAGE = os.path.join(HERE, "setup.html")
 BIN = os.path.join(CFG, "bin")
 PYLIB = os.path.join(CFG, "pylib")
 CONF = os.path.join(CFG, "copyparty.conf")
+PIDFILE = os.path.join(CFG, "copyparty.pid")
 LOG = os.path.join(os.path.expanduser("~/Library/Logs") if MAC else CFG, "copyparty.log")
-EXTRA_PATH = [BIN, "/opt/homebrew/bin", "/usr/local/bin"]
-FF_URL = "https://ffmpeg.martin-riedl.de/redirect/latest/macos/%s/release/%s.zip"
+EXTRA_PATH = [BIN] + ([] if WIN else ["/opt/homebrew/bin", "/usr/local/bin"])
+EXE = ".exe" if WIN else ""
+# the console-less interpreter is fine for this helper, but copyparty wants the normal one
+PY = os.path.join(os.path.dirname(sys.executable), "python.exe") if WIN and os.path.isfile(os.path.join(os.path.dirname(sys.executable), "python.exe")) else sys.executable
+NOWIN = 0x08000000 if WIN else 0  # CREATE_NO_WINDOW
+FF = ({"src": "ffmpeg.martin-riedl.de", "mb": 60} if MAC else {"src": "github.com/BtbN/FFmpeg-Builds", "mb": 140} if WIN else None)
+FF_MAC = "https://ffmpeg.martin-riedl.de/redirect/latest/macos/%s/release/%s.zip"
+FF_WIN = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
 USER_RE = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
 
 lock = threading.Lock()
@@ -48,7 +56,7 @@ def wr(name, text, private=False):
     fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600 if private else 0o644)
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         f.write(text)
-    if private:
+    if private and not WIN:
         os.chmod(p, 0o600)
 
 
@@ -80,7 +88,7 @@ def env_path():
 
 def which(name):
     for d in env_path().split(os.pathsep):
-        p = os.path.join(d, name)
+        p = os.path.join(d, name + EXE)
         if d and os.path.isfile(p) and os.access(p, os.X_OK):
             return p
     return ""
@@ -93,33 +101,43 @@ def have_ffmpeg():
 def have_pillow():
     try:
         e = dict(os.environ, PYTHONPATH=PYLIB)
-        return subprocess.run([sys.executable, "-c", "import PIL"], env=e, capture_output=True, timeout=30).returncode == 0
+        return subprocess.run([PY, "-c", "import PIL"], env=e, capture_output=True, timeout=30, creationflags=NOWIN).returncode == 0
     except Exception:
         return False
 
 
+PRIVATE = re.compile(r"^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)")
+
+
 def lan_ip():
     """The address other devices on the home network should use. VPN and proxy tunnels are skipped."""
-    private = re.compile(r"^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)")
-    try:
-        out = subprocess.run(["/sbin/ifconfig"], capture_output=True, text=True, timeout=5).stdout
-        cands, dev = [], ""
-        for line in out.splitlines():
-            if line and not line[0].isspace():
-                dev = line.split(":")[0]
-            m = re.match(r"\s+inet (\d+\.\d+\.\d+\.\d+)", line)
-            if m and private.match(m.group(1)):
-                cands.append((0 if dev.startswith(("en", "eth", "wl")) else 1, m.group(1)))
-        if cands:
-            return sorted(cands)[0][1]
-    except Exception:
-        pass
+    if not WIN:
+        try:
+            out = subprocess.run(["/sbin/ifconfig"], capture_output=True, text=True, timeout=5).stdout
+            cands, dev = [], ""
+            for line in out.splitlines():
+                if line and not line[0].isspace():
+                    dev = line.split(":")[0]
+                m = re.match(r"\s+inet (\d+\.\d+\.\d+\.\d+)", line)
+                if m and PRIVATE.match(m.group(1)):
+                    cands.append((0 if dev.startswith(("en", "eth", "wl")) else 1, m.group(1)))
+            if cands:
+                return sorted(cands)[0][1]
+        except Exception:
+            pass
+    else:
+        try:
+            for ip in socket.gethostbyname_ex(socket.gethostname())[2]:
+                if PRIVATE.match(ip):
+                    return ip
+        except OSError:
+            pass
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("10.255.255.255", 1))
         ip = s.getsockname()[0]
         s.close()
-        return ip if private.match(ip) else ""
+        return ip if PRIVATE.match(ip) else ""
     except OSError:
         return ""
 
@@ -132,52 +150,87 @@ def port_open(port):
         return False
 
 
+def pid_alive(pid):
+    if WIN:
+        try:
+            r = subprocess.run(["tasklist", "/FI", "PID eq %d" % pid, "/FO", "CSV", "/NH"], capture_output=True, text=True, timeout=10, creationflags=NOWIN)
+            return ('"%d"' % pid) in r.stdout and "python" in r.stdout.lower()
+        except Exception:
+            return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
 def cpp_pids():
     """Only the copyparty started with OUR config file; any other copyparty on this machine is left alone."""
     out = []
-    try:
-        r = subprocess.run(["ps", "-axo", "pid=,command="], capture_output=True, text=True, timeout=5)
-        for line in r.stdout.splitlines():
-            pid, _, cmd = line.strip().partition(" ")
-            if pid.isdigit() and "copyparty" in cmd and cmd.rstrip().endswith(" -c " + CONF):
-                out.append(int(pid))
-    except Exception:
-        pass
-    return [p for p in out if p != os.getpid()]
+    p = rd("copyparty.pid").strip()
+    if p.isdigit() and pid_alive(int(p)):
+        out.append(int(p))
+    if not WIN:
+        try:
+            r = subprocess.run(["ps", "-axo", "pid=,command="], capture_output=True, text=True, timeout=5)
+            for line in r.stdout.splitlines():
+                pid, _, cmd = line.strip().partition(" ")
+                if pid.isdigit() and "copyparty" in cmd and cmd.rstrip().endswith(" -c " + CONF):
+                    out.append(int(pid))
+        except Exception:
+            pass
+    return [x for x in set(out) if x != os.getpid()]
 
 
 def stop_cpp():
-    for p in cpp_pids():
-        try:
-            os.kill(p, signal.SIGTERM)
-        except OSError:
-            pass
+    if WIN:
+        for p in cpp_pids():
+            subprocess.run(["taskkill", "/PID", str(p), "/T", "/F"], capture_output=True, timeout=20, creationflags=NOWIN)
+    else:
+        for p in cpp_pids():
+            try:
+                os.kill(p, signal.SIGTERM)
+            except OSError:
+                pass
+        for _ in range(30):
+            if not cpp_pids():
+                break
+            time.sleep(0.2)
+        for p in cpp_pids():
+            try:
+                os.kill(p, signal.SIGKILL)
+            except OSError:
+                pass
     for _ in range(30):
-        if not cpp_pids():
+        if not port_open(CPP_PORT):
             break
         time.sleep(0.2)
-    for p in cpp_pids():
-        try:
-            os.kill(p, signal.SIGKILL)
-        except OSError:
-            pass
+    try:
+        os.remove(PIDFILE)
+    except OSError:
+        pass
+
+
+def fwd(p):
+    # copyparty configs take forward slashes on every platform
+    return p.replace("\\", "/") if WIN else p
 
 
 def volume_config(fl, pm, user):
     accs = "  accs:\n    %s: %s\n\n" % (pm, user)
     if len(fl) == 1:
-        return "[/media]\n  %s\n%s" % (fl[0], accs)
+        return "[/media]\n  %s\n%s" % (fwd(fl[0]), accs)
     os.makedirs(os.path.join(CFG, "mediaroot"), exist_ok=True)
-    out = "[/media]\n  %s\n  accs:\n    r: %s\n\n" % (os.path.join(CFG, "mediaroot"), user)
+    out = "[/media]\n  %s\n  accs:\n    r: %s\n\n" % (fwd(os.path.join(CFG, "mediaroot")), user)
     used = []
     for p in fl:
-        nm = re.sub(r"[\[\]#:\\]", "_", os.path.basename(p.rstrip("/"))) or "library"
+        nm = re.sub(r"[\[\]#:\\/]", "_", os.path.basename(os.path.normpath(p))) or re.sub(r"[^A-Za-z0-9]", "", p) or "library"
         base, k = nm, 1
         while nm.lower() in used:
             k += 1
             nm = "%s %d" % (base, k)
         used.append(nm.lower())
-        out += "[/media/%s]\n  %s\n%s" % (nm, p, accs)
+        out += "[/media/%s]\n  %s\n%s" % (nm, fwd(p), accs)
     return out
 
 
@@ -194,8 +247,8 @@ def write_config():
            "  hist: %s\n  shr: /share\n  shr-db: %s\n\n[accounts]\n  %s: %s\n\n"
            "[/]\n  %s\n  accs:\n    h: *\n  flags:\n    d2d\n\n%s"
            "[/.wallstate]\n  %s\n  accs:\n    rwd: %s\n  flags:\n    d2d\n") % (
-        CPP_PORT, os.path.join(CFG, "hist"), os.path.join(CFG, "shares.db"), user, pw, wall,
-        volume_config(folders(), perm(), user), os.path.join(CFG, "state"), user)
+        CPP_PORT, fwd(os.path.join(CFG, "hist")), fwd(os.path.join(CFG, "shares.db")), user, pw, fwd(wall),
+        volume_config(folders(), perm(), user), fwd(os.path.join(CFG, "state")), user)
     wr("copyparty.conf", cfg, True)
 
 
@@ -209,79 +262,109 @@ def start_cpp():
     try:
         if not configured():
             raise RuntimeError("not configured")
-        if not have_pillow():
+        if not WIN and not have_pillow():  # the Windows package ships Pillow
             j.update(state="busy", msg="pillow")
             os.makedirs(PYLIB, exist_ok=True)
-            subprocess.run([sys.executable, "-m", "pip", "install", "-q", "--disable-pip-version-check", "--timeout", "10",
+            subprocess.run([PY, "-m", "pip", "install", "-q", "--disable-pip-version-check", "--timeout", "10",
                             "--retries", "1", "--upgrade", "--target", PYLIB, "pillow"], capture_output=True, timeout=300)
         j.update(state="busy", msg="starting")
         stop_cpp()
         write_config()
         os.makedirs(os.path.dirname(LOG), exist_ok=True)
-        e = dict(os.environ, PATH=env_path(), PYTHONPATH=PYLIB)
+        e = dict(os.environ, PATH=env_path(), PYTHONPATH=PYLIB, PYTHONIOENCODING="utf-8")
+        kw = {"creationflags": NOWIN | 0x00000200} if WIN else {"start_new_session": True}  # + CREATE_NEW_PROCESS_GROUP
         with open(LOG, "wb") as lf:
-            subprocess.Popen([sys.executable, SFX, "-c", CONF], stdin=subprocess.DEVNULL, stdout=lf, stderr=lf,
-                             cwd=tempfile.gettempdir(), env=e, start_new_session=True)
-        for _ in range(120):
+            p = subprocess.Popen([PY, SFX, "-c", CONF], stdin=subprocess.DEVNULL, stdout=lf, stderr=lf,
+                                 cwd=tempfile.gettempdir(), env=e, **kw)
+        wr("copyparty.pid", str(p.pid))
+        for _ in range(180):
             if port_open(CPP_PORT):
                 wr("running-version", VERSION)
                 j.update(state="done", msg="")
                 return
+            if p.poll() is not None:
+                raise RuntimeError("copyparty exited, see the log")
             time.sleep(0.5)
         raise RuntimeError("timeout")
     except Exception as ex:
         j.update(state="error", msg=str(ex)[:200])
 
 
+def download(url, dst, j, lo, hi):
+    req = urllib.request.Request(url, headers={"User-Agent": "copyparty-media-wall"})
+    with urllib.request.urlopen(req, timeout=30) as r, open(dst, "wb") as f:
+        total = int(r.headers.get("Content-Length") or 0)
+        got = 0
+        while True:
+            buf = r.read(262144)
+            if not buf:
+                break
+            f.write(buf)
+            got += len(buf)
+            j.update(state="busy", pct=int(lo + (hi - lo) * (got / total if total else 0)))
+
+
 def fetch_ffmpeg():
     j = job["ffmpeg"]
     try:
-        if not MAC:
-            raise RuntimeError("unsupported")
-        arch = "arm64" if platform.machine() == "arm64" else "amd64"
         os.makedirs(BIN, exist_ok=True)
-        for i, name in enumerate(("ffmpeg", "ffprobe")):
-            zp = os.path.join(BIN, name + ".zip")
-            with urllib.request.urlopen(FF_URL % (arch, name), timeout=30) as r, open(zp, "wb") as f:
-                total = int(r.headers.get("Content-Length") or 0)
-                got = 0
-                while True:
-                    buf = r.read(262144)
-                    if not buf:
-                        break
-                    f.write(buf)
-                    got += len(buf)
-                    j.update(state="busy", pct=int((i + (got / total if total else 0)) * 50))
+        if MAC:
+            arch = "arm64" if platform.machine() == "arm64" else "amd64"
+            for i, name in enumerate(("ffmpeg", "ffprobe")):
+                zp = os.path.join(BIN, name + ".zip")
+                download(FF_MAC % (arch, name), zp, j, i * 50, i * 50 + 50)
+                with zipfile.ZipFile(zp) as z:
+                    z.extract(name, BIN)
+                os.remove(zp)
+                os.chmod(os.path.join(BIN, name), 0o755)
+        elif WIN:
+            zp = os.path.join(BIN, "ffmpeg.zip")
+            download(FF_WIN, zp, j, 0, 95)
             with zipfile.ZipFile(zp) as z:
-                z.extract(name, BIN)
+                for name in ("ffmpeg.exe", "ffprobe.exe"):
+                    member = next(m for m in z.namelist() if m.endswith("/bin/" + name))
+                    with z.open(member) as a, open(os.path.join(BIN, name), "wb") as b:
+                        while True:
+                            buf = a.read(1048576)
+                            if not buf:
+                                break
+                            b.write(buf)
             os.remove(zp)
-            os.chmod(os.path.join(BIN, name), 0o755)
-            subprocess.run([os.path.join(BIN, name), "-version"], capture_output=True, timeout=30, check=True)
+        else:
+            raise RuntimeError("unsupported")
+        for name in ("ffmpeg", "ffprobe"):
+            subprocess.run([os.path.join(BIN, name + EXE), "-version"], capture_output=True, timeout=60, check=True, creationflags=NOWIN)
         j.update(state="done", pct=100, msg="")
     except Exception as ex:
         j.update(state="error", msg=str(ex)[:200])
 
 
 def list_dir(path):
-    path = os.path.abspath(os.path.expanduser(path or "~"))
+    home = os.path.expanduser("~")
+    path = os.path.abspath(os.path.expanduser(path)) if path else home
     if not os.path.isdir(path):
-        path = os.path.expanduser("~")
+        path = home
     try:
-        names = sorted((n for n in os.listdir(path) if not n.startswith(".") and os.path.isdir(os.path.join(path, n))), key=str.lower)
+        names = sorted((n for n in os.listdir(path) if not n.startswith((".", "$")) and os.path.isdir(os.path.join(path, n))), key=str.lower)
         err = ""
     except OSError as ex:
         names, err = [], ("denied" if isinstance(ex, PermissionError) else "error")
     if MAC:
         names = [n for n in names if not n.endswith((".app", ".photoslibrary", ".bundle"))]
-    home = os.path.expanduser("~")
-    quick = [("home", home)] + [(k, os.path.join(home, d)) for k, d in (
-        ("movies", "Movies"), ("downloads", "Downloads"), ("desktop", "Desktop"), ("documents", "Documents"),
-        ("pictures", "Pictures"), ("music", "Music")) if os.path.isdir(os.path.join(home, d))]
-    if os.path.isdir("/Volumes"):
-        quick.append(("disks", "/Volumes"))
+    quick = [{"k": "home", "p": home}]
+    for k, d in (("movies", "Videos" if WIN else "Movies"), ("downloads", "Downloads"), ("desktop", "Desktop"),
+                 ("documents", "Documents"), ("pictures", "Pictures"), ("music", "Music")):
+        if os.path.isdir(os.path.join(home, d)):
+            quick.append({"k": k, "p": os.path.join(home, d)})
+    if WIN:
+        for c in string.ascii_uppercase:
+            if os.path.isdir(c + ":\\"):
+                quick.append({"k": "drive", "p": c + ":\\", "n": c + ":"})
+    elif os.path.isdir("/Volumes"):
+        quick.append({"k": "disks", "p": "/Volumes"})
     parent = os.path.dirname(path)
-    return {"path": path, "parent": parent if parent != path else "", "dirs": names, "error": err,
-            "quick": [{"k": k, "p": p} for k, p in quick]}
+    return {"path": path, "parent": parent if parent != path else "", "error": err, "quick": quick,
+            "dirs": [{"n": n, "p": os.path.join(path, n)} for n in names]}
 
 
 def status():
@@ -291,8 +374,8 @@ def status():
     return {"version": VERSION, "configured": configured(), "user": acc[0] if acc else "", "folders": folders(), "perm": perm(),
             "running": run, "stale": run and rd("running-version").strip() != VERSION,
             "local": "http://127.0.0.1:%d/" % CPP_PORT, "lan": ("http://%s:%d/" % (ip, CPP_PORT)) if ip else "",
-            "ffmpeg": have_ffmpeg(), "ffmpeg_job": job["ffmpeg"], "start_job": job["start"], "mac": MAC,
-            "python": platform.python_version()}
+            "ffmpeg": have_ffmpeg(), "ffmpeg_dl": FF, "ffmpeg_job": job["ffmpeg"], "start_job": job["start"],
+            "os": "mac" if MAC else "win" if WIN else "other", "log": LOG, "python": platform.python_version()}
 
 
 def save(body):
@@ -310,7 +393,7 @@ def save(body):
         return "password"
     fl = []
     for p in body.get("folders") or []:
-        p = os.path.abspath(str(p)).rstrip("/") or "/"
+        p = os.path.normpath(os.path.abspath(str(p)))
         if os.path.isdir(p) and p not in fl:
             fl.append(p)
     if not fl:
@@ -322,6 +405,11 @@ def save(body):
     wr("folders.txt", "".join(p + "\n" for p in fl), True)
     wr("perm.txt", pm + "\n")
     return ""
+
+
+DENIED = ("<!doctype html><meta charset=utf-8><title>Media Wall</title><body style='font:16px sans-serif;background:#0b0d12;"
+          "color:#eef1f6;display:grid;place-items:center;height:100vh;margin:0'><div style='text-align:center'>"
+          "请在这台电脑上重新打开影音库应用来进入此页面。<br><br>Open this page by starting the Media Wall app on this computer.</div>")
 
 
 class H(BaseHTTPRequestHandler):
@@ -369,7 +457,7 @@ class H(BaseHTTPRequestHandler):
             if t and secrets.compare_digest(t, token()):
                 return self.send(302, "", "text/plain", {"Location": "/", "Set-Cookie": "wst=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=31536000" % token()})
             if not self.cookie_ok():
-                return self.send(403, "<!doctype html><meta charset=utf-8><title>Media Wall</title><body style='font:16px sans-serif;background:#0b0d12;color:#eef1f6;display:grid;place-items:center;height:100vh;margin:0'><div style='text-align:center'>请在这台电脑上双击 Copyparty 图标来打开此页面。<br><br>Open this page by double-clicking the Copyparty app on this computer.</div>", "text/html")
+                return self.send(403, DENIED, "text/html")
             with open(PAGE, "rb") as f:
                 return self.send(200, f.read(), "text/html")
         if not self.api_ok():
@@ -403,6 +491,8 @@ class H(BaseHTTPRequestHandler):
             job["start"].update(state="idle", msg="")
             return self.send(200, {"error": ""})
         if u.path == "/api/ffmpeg":
+            if not FF:
+                return self.send(400, {"error": "unsupported"})
             with lock:
                 if job["ffmpeg"]["state"] != "busy":
                     job["ffmpeg"].update(state="busy", pct=0, msg="")
@@ -414,6 +504,7 @@ class H(BaseHTTPRequestHandler):
 def main():
     os.makedirs(CFG, exist_ok=True)
     token()
+    wr("helper.pid", str(os.getpid()))
     srv = ThreadingHTTPServer(("127.0.0.1", PORT), H)
     # after an update, or after a reboot, bring the service back without asking
     if configured() and (not cpp_pids() or rd("running-version").strip() != VERSION):
