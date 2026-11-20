@@ -93,12 +93,16 @@ Every video and picture in these screenshots was drawn by a script for this demo
 1. Download `copyparty-media-wall-macos.zip` from the table above and unzip it.
 2. Move **Copyparty** out of the unzipped folder (to Applications or the Desktop), then double-click it.
    The app is not signed with an Apple developer certificate, so the first launch is blocked: open **System Settings → Privacy & Security** and click **Open Anyway**.
-3. Set a username and password, pick one or more folders, choose read-only or read-write.
-4. Your browser opens the library. Other devices on the same network use the address shown in the dialog.
+3. Your browser opens a setup page. Follow its steps: create the login, add your media folders, choose read-only or read-write, and optionally download FFmpeg for video covers.
+4. The service starts and the page shows the address for this computer and for the other devices on your network.
 
-Double-click the app again to open the page, see the address, **manage shared folders**, or stop the service.
+![First-run setup in the browser](docs/shots/en/setup-wizard.jpg)
 
-What the launcher does for you: generates the copyparty config, starts the bundled official `copyparty-sfx.py`, installs Pillow for image thumbnails into its own folder, and offers to download FFmpeg (for video covers) if none is installed. It needs Python 3; if it is missing, the launcher opens Apple's Command Line Tools installer.
+Double-click the app again any time to get the control page: open the library, copy the address, add or remove folders, change the password or the permission, stop or restart the service.
+
+![Control page](docs/shots/en/setup-control.jpg)
+
+How this works: the app starts a small helper (`wall-helper.py`, Python standard library only) that serves the setup page on `127.0.0.1` and does what a web page cannot do by itself — browse folders on disk, write the copyparty config, fetch FFmpeg and Pillow, start and stop the bundled official `copyparty-sfx.py`. The setup page only opens on the computer it runs on; other devices get the library, never the controls. It needs Python 3; if that is missing, the app opens Apple's Command Line Tools installer.
 
 ## Manual setup (any OS)
 
@@ -125,15 +129,17 @@ Nothing in copyparty is modified, so updating copyparty does not break the front
 
 - **No online metadata.** Covers come from video frames or local images; there is no TMDB-style scraping of posters, plots or cast.
 - **No transcoding.** The browser plays the file as it is. HEVC, AC3/DTS audio, AVI, RMVB and similar may not play; the window then offers a download and a copyable link for IINA / VLC / Infuse.
-- The web interface is in English and Simplified Chinese. The macOS launcher's own dialogs are in Chinese only for now. More translations are welcome.
+- The library and the setup page are in English and Simplified Chinese. More translations are welcome.
 - The fingerprint samples three 64 KB blocks plus the exact size rather than hashing whole files, to avoid reading entire multi-gigabyte videos.
 - Tested in Chrome on macOS. Safari and real phones have had only light testing.
 
 ## Security notes
 
+- The setup and control page listens on `127.0.0.1` only. It also checks the `Host` header, needs a secret token that the app hands to your browser, and requires a custom request header, so other devices on the network and other websites in your browser cannot use it.
+
 - Connections are plain HTTP unless you put copyparty behind TLS. Use it on networks you trust.
-- The macOS launcher stores the password in plain text in `~/Library/Application Support/copyparty/` (readable only by your user), because copyparty's config needs it.
-- The optional FFmpeg download in the launcher comes from a third-party build site (`ffmpeg.martin-riedl.de`), since FFmpeg does not publish macOS binaries itself. Install FFmpeg yourself (for example with Homebrew) if you prefer; the launcher will use it and skip the download.
+- The macOS app stores the password in plain text in `~/Library/Application Support/copyparty/` (readable only by your user), because copyparty's config needs it.
+- The optional FFmpeg download on the setup page comes from a third-party build site (`ffmpeg.martin-riedl.de`), since FFmpeg does not publish macOS binaries itself. Install FFmpeg yourself (for example with Homebrew) if you prefer; it will be used and the download step is skipped.
 
 ## Building the macOS app
 
@@ -141,7 +147,7 @@ Nothing in copyparty is modified, so updating copyparty does not break the front
 sh macos/build.sh
 ```
 
-Produces `dist/copyparty-media-wall-macos.zip`. The script compiles `macos/Copyparty.applescript`, fetches the latest official `copyparty-sfx.py`, and bundles `web/`.
+Produces `dist/copyparty-media-wall-macos.zip`. The script compiles `macos/Copyparty.applescript` (a thin launcher), fetches the latest official `copyparty-sfx.py`, and bundles `web/`, the helper and the setup page.
 
 ## Credits and license
 

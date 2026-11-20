@@ -14,6 +14,8 @@ curl -fsSL -o "$APP/Contents/Resources/copyparty-sfx.py" \
   https://github.com/9001/copyparty/releases/latest/download/copyparty-sfx.py
 mkdir "$APP/Contents/Resources/wall"
 cp web/index.html web/app.js web/app.css "$APP/Contents/Resources/wall/"
+# the setup helper and its page: everything after the double-click happens in the browser
+cp macos/wall-helper.py macos/setup.html "$APP/Contents/Resources/"
 cp macos/使用说明.txt "$OUT/$NAME/"
 xattr -cr "$APP"
 codesign --force --deep -s - "$APP"

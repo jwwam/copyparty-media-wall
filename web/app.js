@@ -111,8 +111,8 @@ const I18N = (() => {
     '全部文件': 'All files', '无法打开这个文件夹': 'Cannot open this folder', '它可能已被移动或删除': 'It may have been moved or deleted', '取消全选': 'Select none', '全选': 'Select all', '重命名': 'Rename', '移动到': 'Move to', '复制到': 'Copy to', '下载': 'Download', '删除': 'Delete', '完成': 'Done',
     '新建文件夹': 'New folder', '上传': 'Upload', '多选管理': 'Select', '打包下载': 'Download as zip', '媒体目录': 'Libraries', '经典界面': 'Classic UI', '添加媒体目录': 'Add a library', '这个文件夹是空的': 'This folder is empty', '把文件拖到这里，或点“上传”': 'Drop files here, or press “Upload”',
     '取消': 'Cancel', '这里没有子文件夹': 'No subfolders here', '这一层不能存放文件，请进入下面的某个目录。': 'Files cannot be stored at this level; open one of the libraries below.', '影音库会扫描下面这些目录里的全部文件：': 'The wall scans every file in these libraries:', '（共享文件夹本身）': '(the shared folder itself)',
-    '添加或移除目录': 'Adding or removing libraries', '要在运行服务的那台电脑上操作：双击': 'is done on the computer that runs the service: double-click the', '图标 → 选择「管理共享目录」→ 添加文件夹（可一次选多个）。服务会自动重启，新目录扫描完成后就出现在这里。': 'icon → choose “管理共享目录” (manage shared folders) → add folders (several at once is fine). The service restarts by itself and the new library shows up here once it has been scanned.',
-    '出于安全考虑，网页里不能直接添加电脑上的任意文件夹——否则任何知道密码的人都能把那台电脑上的私人文件夹共享出来。': 'For safety, folders cannot be added from the web page — otherwise anyone who knows the password could share private folders of that computer.', '知道了': 'Got it',
+    '添加或移除目录': 'Adding or removing libraries', '在管理页面里操作。管理页面只能在运行服务的那台电脑上打开：双击': 'is done on the control page, which only opens on the computer that runs the service: double-click the', '图标，或者在那台电脑上点下面的按钮。': 'app, or press the button below on that computer.',
+    '其他设备打不开管理页面——否则任何知道密码的人都能把那台电脑上的私人文件夹共享出来。': 'Other devices cannot open the control page — otherwise anyone who knows the password could share private folders of that computer.', '打开管理页面（仅本机）': 'Open the control page (this computer only)', '服务管理（仅本机）': 'Service control (this computer only)', '知道了': 'Got it',
     '没有权限执行这个操作': 'You do not have permission to do this', '创建': 'Create', '名称不能包含斜杠': 'Names cannot contain slashes', '复制到这里': 'Copy here', '移动到这里': 'Move here', '删除确认': 'Confirm delete',
     '打开': 'Open', '移动到…': 'Move to…', '复制到…': 'Copy to…', '打开所在文件夹': 'Show in folder', '不支持直接拖入文件夹，请拖入文件': 'Folders cannot be dropped; drop files instead',
     '只让当前窗口出声': 'Sound from the active window only', '自动播放下一集': 'Autoplay next episode', '鼠标悬停时预览': 'Preview on hover', '播放记录': 'Watch history', '导出播放记录和收藏': 'Export history and favourites', '导入播放记录和收藏': 'Import history and favourites', '清除观看记录': 'Clear watch history',
@@ -913,9 +913,9 @@ function showLibs() {
   const m = modal(`<h3>媒体目录</h3>
     <p class="mhint" style="margin-top:0">影音库会扫描下面这些目录里的全部文件：</p>
     <div class="pfl">${(S.roots.length ? S.roots : ['（共享文件夹本身）']).map(n => `<div class="pfr" style="cursor:default">${ico('folder')}<span${S.roots.length ? '' : ' class="tr"'}>${esc(n)}</span></div>`).join('')}</div>
-    <p class="mhint"><b>添加或移除目录</b>要在运行服务的那台电脑上操作：双击 <b>Copyparty</b> 图标 → 选择「管理共享目录」→ 添加文件夹（可一次选多个）。服务会自动重启，新目录扫描完成后就出现在这里。</p>
-    <p class="mhint">出于安全考虑，网页里不能直接添加电脑上的任意文件夹——否则任何知道密码的人都能把那台电脑上的私人文件夹共享出来。</p>
-    <div class="macts"><button class="btn sm acc" data-m="ok">知道了</button></div>`);
+    <p class="mhint"><b>添加或移除目录</b>在管理页面里操作。管理页面只能在运行服务的那台电脑上打开：双击 <b>Copyparty</b> 图标，或者在那台电脑上点下面的按钮。</p>
+    <p class="mhint">其他设备打不开管理页面——否则任何知道密码的人都能把那台电脑上的私人文件夹共享出来。</p>
+    <div class="macts"><a class="btn sm" href="http://127.0.0.1:3924/" target="_blank" rel="noopener">打开管理页面（仅本机）</a><button class="btn sm acc" data-m="ok">知道了</button></div>`);
   m.addEventListener('click', e => { if (e.target.closest('[data-m]')) m.close(null); });
 }
 
@@ -1113,6 +1113,7 @@ function settingsPop(anchor) {
     <button data-s="clear">${ico('clock')}<span class="lb">清除观看记录</span></button>
     <div class="sep"></div>
     <button data-s="libs">${ico('folder')}<span class="lb">媒体目录（添加 / 移除）</span></button>
+    <a href="http://127.0.0.1:3924/" target="_blank" rel="noopener"><button type="button" data-s="classic">${ico('gear')}<span class="lb">服务管理（仅本机）</span></button></a>
     <a href="/?shares" target="_blank" rel="noopener"><button type="button" data-s="classic">${ico('link')}<span class="lb">管理分享链接</span></button></a>
     <a href="/${ROOT}/" target="_blank" rel="noopener"><button type="button" data-s="classic">${ico('ext')}<span class="lb">经典界面（上传 / 管理）</span></button></a>
     <button data-s="logout">${ico('out')}<span class="lb">退出登录</span></button>`,

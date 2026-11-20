@@ -94,12 +94,16 @@
 1. 从上面的表格下载 `copyparty-media-wall-macos.zip` 并解压。
 2. 把 **Copyparty** 从解压出的文件夹里拖出来（拖到「应用程序」或桌面），再双击。
    应用没有苹果开发者签名，第一次打开会被拦截：到 **系统设置 → 隐私与安全性** 里点 **仍要打开**。
-3. 设置用户名和密码，选择一个或多个文件夹，选择只读或可读写。
-4. 浏览器会自动打开影音库。同一网络下的其他设备用弹窗里显示的地址访问。
+3. 浏览器会自动打开设置页面。按页面上的步骤走：设置登录账号、添加媒体文件夹、选择只读或可读写，还可以顺便下载 FFmpeg 用来显示视频封面。
+4. 服务自动启动，页面上显示这台电脑和局域网内其他设备各自的访问地址。
 
-再次双击应用，可以打开页面、查看地址、**管理共享目录**、停止服务。
+![在浏览器里完成首次设置](docs/shots/setup-wizard.jpg)
 
-启动器替你做的事：生成 copyparty 配置，启动内置的官方 `copyparty-sfx.py`，把 Pillow（图片缩略图）装到它自己的目录里，并在没有 FFmpeg 时询问是否下载（用于视频封面）。它需要 Python 3；没有的话会打开苹果的命令行开发者工具安装窗口。
+之后随时再双击应用，打开的是管理页面：打开影音库、复制地址、添加或移除文件夹、修改密码和权限、停止或重启服务。
+
+![管理页面](docs/shots/setup-control.jpg)
+
+原理：应用会启动一个很小的助手程序（`wall-helper.py`，只用 Python 标准库），在 `127.0.0.1` 上提供设置页面，并替网页完成它自己做不了的事：浏览磁盘上的文件夹、写 copyparty 配置、下载 FFmpeg 和 Pillow、启动和停止内置的官方 `copyparty-sfx.py`。设置页面只能在运行它的那台电脑上打开，其他设备只能访问影音库，碰不到管理功能。它需要 Python 3；没有的话应用会打开苹果的命令行开发者工具安装窗口。
 
 ## 手动部署（任意系统）
 
@@ -125,16 +129,18 @@ copyparty 本身没有任何改动，所以升级 copyparty 不会影响这个�
 ## 限制
 
 - **没有联网刮削。** 封面来自视频截图或本地图片，不会自动下载海报、简介、演员表。
-- 网页界面支持中文和英文；macOS 启动器自己的弹窗目前只有中文。
+- 影音库和设置页面都支持中文和英文。
 - **不转码。** 浏览器直接播放原文件。HEVC、AC3/DTS 音轨、AVI、RMVB 等可能放不了，这时窗口会提供下载和可复制的链接，用 IINA / VLC / Infuse 打开。
 - 指纹取的是三段各 64 KB 的内容加精确大小，而不是整个文件的哈希，以免把几十 GB 的视频完整读一遍。
 - 在 macOS 的 Chrome 上测试过。Safari 和真实手机只做了少量测试。
 
 ## 安全说明
 
+- 设置和管理页面只监听 `127.0.0.1`，并且会校验 `Host` 请求头、需要应用交给浏览器的一个密钥、还要求一个自定义请求头。所以局域网里的其他设备、以及你浏览器里的其他网站，都用不了它。
+
 - 除非你给 copyparty 配了 TLS，否则连接是明文 HTTP，请只在可信的网络里使用。
-- macOS 启动器把密码明文保存在 `~/Library/Application Support/copyparty/`（只有你的账户能读），因为 copyparty 的配置需要它。
-- 启动器里可选的 FFmpeg 下载来自第三方构建站点（`ffmpeg.martin-riedl.de`），因为 FFmpeg 官方不提供 macOS 的现成程序。你也可以自己安装 FFmpeg（比如用 Homebrew），启动器会直接使用并跳过下载。
+- macOS 应用把密码明文保存在 `~/Library/Application Support/copyparty/`（只有你的账户能读），因为 copyparty 的配置需要它。
+- 设置页面里可选的 FFmpeg 下载来自第三方构建站点（`ffmpeg.martin-riedl.de`），因为 FFmpeg 官方不提供 macOS 的现成程序。你也可以自己安装 FFmpeg（比如用 Homebrew），应用会直接使用并跳过下载这一步。
 
 ## 构建 macOS 应用
 
@@ -142,7 +148,7 @@ copyparty 本身没有任何改动，所以升级 copyparty 不会影响这个�
 sh macos/build.sh
 ```
 
-生成 `dist/copyparty-media-wall-macos.zip`。脚本会编译 `macos/Copyparty.applescript`，下载最新的官方 `copyparty-sfx.py`，并打包 `web/`。
+生成 `dist/copyparty-media-wall-macos.zip`。脚本会编译 `macos/Copyparty.applescript`（一个很薄的启动器），下载最新的官方 `copyparty-sfx.py`，并打包 `web/`、助手程序和设置页面。
 
 ## 致谢和许可
 
