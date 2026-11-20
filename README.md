@@ -85,7 +85,7 @@ Every video and picture in these screenshots was drawn by a script for this demo
 | Platform | Download | Notes |
 |---|---|---|
 | **macOS** (Apple silicon and Intel) | [copyparty-media-wall-macos.zip](../../releases/latest/download/copyparty-media-wall-macos.zip) | Double-click launcher, see below |
-| **Windows** | Coming soon — not available yet | Until then, use the [manual setup](#manual-setup-any-os) |
+| **Windows** 10 / 11, 64-bit | [copyparty-media-wall-windows.zip](../../releases/latest/download/copyparty-media-wall-windows.zip) | New. Nothing to install, see [below](#quick-start-on-windows) |
 | **Linux / NAS / Docker** | No package needed | Use the [manual setup](#manual-setup-any-os) with your own copyparty |
 
 ## Quick start on macOS
@@ -103,6 +103,17 @@ Double-click the app again any time to get the control page: open the library, c
 ![Control page](docs/shots/en/setup-control.jpg)
 
 How this works: the app starts a small helper (`wall-helper.py`, Python standard library only) that serves the setup page on `127.0.0.1` and does what a web page cannot do by itself — browse folders on disk, write the copyparty config, fetch FFmpeg and Pillow, start and stop the bundled official `copyparty-sfx.py`. The setup page only opens on the computer it runs on; other devices get the library, never the controls. It needs Python 3; if that is missing, the app opens Apple's Command Line Tools installer.
+
+## Quick start on Windows
+
+1. Download `copyparty-media-wall-windows.zip` from the table above and unzip the whole folder to a place you want to keep it.
+2. Double-click **Media Wall.bat**. Windows may say "Windows protected your PC" because the package is not code-signed: click **More info**, then **Run anyway**.
+3. Your browser opens the same setup page as on macOS: create the login, add folders (the folder browser lists your drives), choose the permission, optionally download FFmpeg for video covers (about 140 MB).
+4. When Windows Firewall asks about Python, allow it on private networks, otherwise other devices cannot connect.
+
+Nothing is installed and no Python is needed: the folder carries the official embeddable Python, Pillow, and the official `copyparty-sfx.py`. Settings live in `%APPDATA%\copyparty-media-wall`.
+
+How it was tested: the package is built and exercised end to end on GitHub's Windows servers on every change (setup API, start, login, index with non-ASCII names, thumbnails, upload, share links, FFmpeg download, video covers, stop — see `windows/smoke_test.py`). It has **not** yet been clicked through by a person on a Windows 10 or 11 desktop, so the double-click, the SmartScreen and firewall prompts, and the pages in Edge are untested. Reports are welcome.
 
 ## Manual setup (any OS)
 

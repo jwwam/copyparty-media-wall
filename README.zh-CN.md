@@ -86,7 +86,7 @@
 | 平台 | 下载地址 | 说明 |
 |---|---|---|
 | **macOS**（Apple 芯片和 Intel） | [copyparty-media-wall-macos.zip](../../releases/latest/download/copyparty-media-wall-macos.zip) | 双击启动，见下文 |
-| **Windows** | 即将推出，暂未提供 | 目前可按[手动部署](#手动部署任意系统)使用 |
+| **Windows** 10 / 11，64 位 | [copyparty-media-wall-windows.zip](../../releases/latest/download/copyparty-media-wall-windows.zip) | 新增。不需要安装任何东西，见[下文](#windows-快速开始) |
 | **Linux / NAS / Docker** | 不需要安装包 | 用自己的 copyparty 按[手动部署](#手动部署任意系统)配置 |
 
 ## macOS 快速开始
@@ -104,6 +104,17 @@
 ![管理页面](docs/shots/setup-control.jpg)
 
 原理：应用会启动一个很小的助手程序（`wall-helper.py`，只用 Python 标准库），在 `127.0.0.1` 上提供设置页面，并替网页完成它自己做不了的事：浏览磁盘上的文件夹、写 copyparty 配置、下载 FFmpeg 和 Pillow、启动和停止内置的官方 `copyparty-sfx.py`。设置页面只能在运行它的那台电脑上打开，其他设备只能访问影音库，碰不到管理功能。它需要 Python 3；没有的话应用会打开苹果的命令行开发者工具安装窗口。
+
+## Windows 快速开始
+
+1. 从上面的表格下载 `copyparty-media-wall-windows.zip`，把整个文件夹解压到一个固定的位置。
+2. 双击 **Media Wall.bat**。因为没有代码签名，Windows 可能提示「Windows 已保护你的电脑」：点 **更多信息**，再点 **仍要运行**。
+3. 浏览器会打开和 macOS 上一样的设置页面：设置登录账号、添加文件夹（文件夹浏览器里会列出各个盘符）、选择权限，还可以下载 FFmpeg 用来显示视频封面（约 140 MB）。
+4. Windows 防火墙询问是否允许 Python 时，请在「专用网络」上允许，否则其他设备连不上。
+
+不会往系统里安装任何东西，也不需要 Python：文件夹里自带官方的嵌入式 Python、Pillow 和官方的 `copyparty-sfx.py`。设置保存在 `%APPDATA%\copyparty-media-wall`。
+
+测试方式：每次改动都会在 GitHub 的 Windows 服务器上构建安装包并完整跑一遍（设置接口、启动、登录、含中文文件名的索引、缩略图、上传、分享链接、FFmpeg 下载、视频封面、停止，见 `windows/smoke_test.py`）。但它**还没有**由真人在 Windows 10 或 11 的桌面上点过一遍，所以双击启动、SmartScreen 和防火墙提示、以及页面在 Edge 里的表现都没有验证过。欢迎反馈。
 
 ## 手动部署（任意系统）
 
