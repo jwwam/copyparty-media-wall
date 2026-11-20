@@ -87,7 +87,8 @@
 |---|---|---|
 | **macOS**（Apple 芯片和 Intel） | [copyparty-media-wall-macos.zip](../../releases/latest/download/copyparty-media-wall-macos.zip) | 双击启动，见下文 |
 | **Windows** 10 / 11，64 位 | [copyparty-media-wall-windows.zip](../../releases/latest/download/copyparty-media-wall-windows.zip) | 新增。不需要安装任何东西，见[下文](#windows-快速开始) |
-| **Linux / NAS / Docker** | 不需要安装包 | 用自己的 copyparty 按[手动部署](#手动部署任意系统)配置 |
+| **Docker**（Linux、NAS）— amd64、arm64、armv7 | `ghcr.io/jwwam/copyparty-media-wall` | 见 [Docker](#docker) |
+| **其他环境** | 不需要安装包 | 用自己的 copyparty 按[手动部署](#手动部署任意系统)配置 |
 
 ## macOS 快速开始
 
@@ -115,6 +116,36 @@
 不会往系统里安装任何东西，也不需要 Python：文件夹里自带官方的嵌入式 Python、Pillow 和官方的 `copyparty-sfx.py`。设置保存在 `%APPDATA%\copyparty-media-wall`。
 
 测试方式：每次改动都会在 GitHub 的 Windows 服务器上构建安装包并完整跑一遍（设置接口、启动、登录、含中文文件名的索引、缩略图、上传、分享链接、FFmpeg 下载、视频封面、停止，见 `windows/smoke_test.py`）。但它**还没有**由真人在 Windows 10 或 11 的桌面上点过一遍，所以双击启动、SmartScreen 和防火墙提示、以及页面在 Edge 里的表现都没有验证过。欢迎反馈。
+
+## Docker
+
+镜像是在官方 `copyparty/ac` 镜像（自带 Pillow 和 FFmpeg）的基础上加入了这个界面。
+
+```sh
+docker run -d --name media-wall --restart unless-stopped \
+  -p 3923:3923 \
+  -e WALL_PASSWORD=改成你的密码 \
+  -v /你的/媒体目录:/media \
+  -v /保存设置的目录:/data \
+  ghcr.io/jwwam/copyparty-media-wall:latest
+```
+
+然后打开 `http://<服务器地址>:3923/`，用这个密码登录。仓库里有现成的 [`docker-compose.yml`](docker/docker-compose.yml)。
+
+| 设置 | 含义 |
+|---|---|
+| `WALL_PASSWORD` | 必填。至少 8 位，不能有空格。也可以用 `WALL_PASSWORD_FILE` 从文件读取（Docker secrets）。 |
+| `WALL_USER` | 登录用户名，默认 `wall`。 |
+| `WALL_PERM` | `r`（默认）只读；`rw` 允许上传、重命名、移动、删除。 |
+| `/media` | 你的媒体库。挂载一个文件夹到这里，或者挂载多个到它下面：`-v /a:/media/电影 -v /b:/media/照片`。 |
+| `/data` | 设置、索引、缩略图、播放记录和分享链接。请挂载出来，否则删除容器后会丢失。 |
+
+说明：
+
+- 加上 `-u 1000:1000`（换成你自己的用户和组 ID），上传的文件就归你所有；这时 `/data` 要对该用户可写。
+- 镜像里没有桌面版的设置页面，容器靠上面这些变量来配置。要修改就用新的值重建容器，其余数据保存在 `/data` 里不受影响。
+- 官方镜像里的 FFmpeg 能读大多数格式，但出于法律原因不支持 HEVC/H.265 和 HEIC，这类文件不会有封面。播放不受影响，因为播放是在你的浏览器里进行的。
+- 测试方式：每次改动都会在 GitHub 的 Linux 服务器上构建镜像并实际运行容器，分别以读写模式和"非 root 用户 + 只读"模式跑一遍（登录、含中文文件名的索引、图片和视频封面、上传、分享链接、重启）。arm64 和 armv7 镜像由同样的文件构建，但没有在测试里运行过；也还没有在真实的 NAS 上试过。
 
 ## 手动部署（任意系统）
 

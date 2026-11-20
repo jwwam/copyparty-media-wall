@@ -86,7 +86,8 @@ Every video and picture in these screenshots was drawn by a script for this demo
 |---|---|---|
 | **macOS** (Apple silicon and Intel) | [copyparty-media-wall-macos.zip](../../releases/latest/download/copyparty-media-wall-macos.zip) | Double-click launcher, see below |
 | **Windows** 10 / 11, 64-bit | [copyparty-media-wall-windows.zip](../../releases/latest/download/copyparty-media-wall-windows.zip) | New. Nothing to install, see [below](#quick-start-on-windows) |
-| **Linux / NAS / Docker** | No package needed | Use the [manual setup](#manual-setup-any-os) with your own copyparty |
+| **Docker** (Linux, NAS) — amd64, arm64, armv7 | `ghcr.io/jwwam/copyparty-media-wall` | See [Docker](#docker) |
+| **Anything else** | No package needed | Use the [manual setup](#manual-setup-any-os) with your own copyparty |
 
 ## Quick start on macOS
 
@@ -114,6 +115,36 @@ How this works: the app starts a small helper (`wall-helper.py`, Python standard
 Nothing is installed and no Python is needed: the folder carries the official embeddable Python, Pillow, and the official `copyparty-sfx.py`. Settings live in `%APPDATA%\copyparty-media-wall`.
 
 How it was tested: the package is built and exercised end to end on GitHub's Windows servers on every change (setup API, start, login, index with non-ASCII names, thumbnails, upload, share links, FFmpeg download, video covers, stop — see `windows/smoke_test.py`). It has **not** yet been clicked through by a person on a Windows 10 or 11 desktop, so the double-click, the SmartScreen and firewall prompts, and the pages in Edge are untested. Reports are welcome.
+
+## Docker
+
+The image is the official `copyparty/ac` image (Pillow and FFmpeg included) with this front end added.
+
+```sh
+docker run -d --name media-wall --restart unless-stopped \
+  -p 3923:3923 \
+  -e WALL_PASSWORD=change-this-password \
+  -v /path/to/your/media:/media \
+  -v /path/to/keep/settings:/data \
+  ghcr.io/jwwam/copyparty-media-wall:latest
+```
+
+Then open `http://<server>:3923/` and log in with that password. A ready-made [`docker-compose.yml`](docker/docker-compose.yml) is in the repository.
+
+| Setting | Meaning |
+|---|---|
+| `WALL_PASSWORD` | Required. At least 8 characters, no spaces. `WALL_PASSWORD_FILE` reads it from a file (Docker secrets). |
+| `WALL_USER` | Login name, default `wall`. |
+| `WALL_PERM` | `r` (default) read-only, or `rw` to allow upload, rename, move and delete. |
+| `/media` | Your library. Mount one folder here, or several below it: `-v /a:/media/Movies -v /b:/media/Photos`. |
+| `/data` | Settings, index, thumbnails, watch history and share links. Mount it, or they are lost when the container is removed. |
+
+Notes:
+
+- Add `-u 1000:1000` (your own user and group id) so that uploaded files belong to you; `/data` must be writable by that user.
+- The setup page of the desktop apps is not part of the image: a container is configured with the variables above. To change something, recreate the container with new values; `/data` keeps the rest.
+- The FFmpeg inside the official image can read most formats but, for legal reasons, not HEVC/H.265 or HEIC, so those files get no cover. Playback is unaffected; it happens in your browser.
+- How it was tested: on every change the image is built and a container is run on GitHub's Linux servers, read-write and read-only as a non-root user (login, index with non-ASCII names, image and video covers, upload, share links, restart). The arm64 and armv7 images are built from the same files but are not run in that test, and no real NAS has been tried yet.
 
 ## Manual setup (any OS)
 
