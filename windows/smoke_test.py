@@ -9,6 +9,12 @@ Works on Windows, macOS and Linux.
 from http.cookiejar import CookieJar
 import argparse, json, os, shutil, subprocess, sys, tempfile, time, urllib.error, urllib.parse, urllib.request
 
+for _s in (sys.stdout, sys.stderr):  # Windows consoles default to a legacy code page
+    try:
+        _s.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 ap = argparse.ArgumentParser()
 ap.add_argument("--python", required=True)
 ap.add_argument("--app", required=True)
