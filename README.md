@@ -10,7 +10,9 @@
 
 **In one sentence:** point it at the folders that hold your films, photos, music and any other files on one computer, and every computer, phone and tablet on your network gets a media library and a shared file space in the browser — nothing to install on them.
 
-![Four videos playing at the same time inside one page](docs/shots/multi-video.gif)
+![Four videos playing at once: windows are dragged and resized over the library, then one click on Tile spreads them into a video wall](docs/shots/multi-video.gif)
+
+<sub>Recorded from the real page: every window is a playing video. Drag them anywhere, resize them, then press <b>Tile</b>.</sub>
 
 > Built on top of **[copyparty](https://github.com/9001/copyparty)** by [9001](https://github.com/9001) — the portable file server that does all the real work here (storage, indexing, thumbnails, accounts). This project is only a set of static pages that talk to copyparty's stock HTTP API. If you find it useful, go star copyparty first.
 
@@ -25,6 +27,7 @@
 - **Records follow the file** — each watched or favourited file gets a fingerprint (exact size + SHA-256 of its head, middle and tail). Rename it, move it, or switch libraries, and its progress and favourite are matched back automatically.
 - **Export / import** watch history and favourites as a JSON file.
 - **File sharing on your network** — it is still a file server underneath: every kind of file in the shared folders can be browsed, opened and downloaded from any device, whole folders download as a zip, and with read-write access other devices can upload into them. Handy for getting files between a phone and a computer.
+- **Share links** — give someone a link to one file or folder that opens without the password and expires when you choose.
 - **File management** — new folder, upload (drag and drop), rename, move, copy, delete, zip download, multi-select, right-click menu.
 - **Several libraries** side by side, each a folder on disk.
 - **Local artwork** — put `Movie.jpg` next to `Movie.mp4` and it becomes the cover.
@@ -38,7 +41,7 @@ This is the part that file servers and most media libraries do not do: playback 
 
 ![Several videos playing at once in floating windows](docs/shots/en/multi-window.jpg)
 
-**Tiled** — one click arranges every open window into a video wall; one more puts the whole wall fullscreen. The animation at the top of this page is this layout, recorded from the real page.
+**Tiled** — one click arranges every open window into a video wall; one more puts the whole wall fullscreen. The animation at the top of this page ends in this layout.
 
 ![Four videos tiled and playing together](docs/shots/en/multi-tile.jpg)
 
@@ -58,7 +61,15 @@ The wall is the friendly face, but the folders you share are shared as files too
 - **Organise** with new folders, rename, move and copy, across libraries.
 - **One password** protects everything; choose read-only or read-write when you start the service.
 
-What it does not do yet: public share links for a single file or folder (a link you can send to someone who has no password). copyparty itself can do that; this front end does not expose it.
+### Share links
+
+Right-click a file or folder (or select several files and press **Share**) to create a link that opens **without the password**. Whoever has the link sees only what you shared — one file, a few files from one folder, or one folder — and nothing else in the library.
+
+- Pick how long the link lives: 1 hour, 1 day, 7 days, or until you revoke it.
+- Revoke links any time from **Settings → Manage share links**.
+- A link to a single file opens the file directly; a link to a folder or several files opens copyparty's own file list.
+- The link points at your server, so it works wherever the server can be reached — normally the same Wi-Fi or LAN. It is not an internet link unless you have made the server reachable from outside yourself.
+- Share links are a copyparty feature (`shr` in the config); this front end adds the buttons.
 
 ## More screenshots
 

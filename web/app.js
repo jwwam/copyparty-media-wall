@@ -57,6 +57,7 @@ const IC = {
   plus: '<path d="M12 5v14M5 12h14"/>',
   sel: '<rect x="4" y="4" width="16" height="16" rx="3.500"/><path d="m8 12.500 3 3 5-6"/>',
   zip: '<path d="M6.500 3.500h7l4.500 4.500v12.500h-11.500z"/><path d="M11 4v2M11 8v2M11 12v2M11 16v2"/>',
+  link: '<path d="M10 14a4.500 4.500 0 0 0 6.400 0l3-3a4.500 4.500 0 0 0-6.400-6.400l-1.200 1.200"/><path d="M14 10a4.500 4.500 0 0 0-6.400 0l-3 3a4.500 4.500 0 0 0 6.400 6.400l1.200-1.200"/>',
   more: '<circle cx="5.500" cy="12" r="1.300"/><circle cx="12" cy="12" r="1.300"/><circle cx="18.500" cy="12" r="1.300"/>',
 };
 const ico = (n, cls) => `<svg class="i${cls ? ' ' + cls : ''}" viewBox="0 0 24 24">${IC[n] || ''}</svg>`;
@@ -126,6 +127,10 @@ const I18N = (() => {
     '全部播放 / 暂停': 'Play / pause all', '全部暂停': 'Pause all', '全部播放': 'Play all', '关闭所有窗口': 'Close all windows', '链接已复制': 'Link copied', '只有选中的窗口出声': 'Only the active window has sound', '所有窗口同时出声': 'All windows have sound',
     '已加入收藏': 'Added to favourites', '已取消收藏': 'Removed from favourites', '刷新失败，请检查网络': 'Reload failed, check the network', '排序方式': 'Sort by', '无法连接服务器': 'Cannot reach the server', '请确认服务已启动，然后刷新页面': 'Make sure the service is running, then reload the page',
     '导入失败：这不是有效的播放记录文件': 'Import failed: this is not a valid history file', '导入失败：文件里没有播放记录': 'Import failed: the file has no history in it', '收藏': 'Favourite', '切换语言': 'Switch language',
+    '分享链接…': 'Share link…', '分享': 'Share', '生成分享链接': 'Create a share link', '有效期': 'Expires after', '1 小时': '1 hour', '1 天': '1 day', '7 天': '7 days', '永久': 'Never', '生成链接': 'Create link',
+    '分享链接已生成': 'Share link created', '查看和撤销已有的分享链接 →': 'See and revoke existing share links →', '管理分享链接': 'Manage share links', '请手动复制链接': 'Please copy the link by hand',
+    '一次只能分享一个文件夹，或者同一文件夹里的若干文件': 'Share one folder at a time, or several files from the same folder', '一次分享的文件必须在同一个文件夹里': 'Files shared together must be in the same folder',
+    '服务器没有开启分享功能': 'sharing is not enabled on the server', '服务器正在建立索引，请稍后再试': 'the server is still indexing, try again in a moment',
   };
   D['收藏'] = 'Favourites';
   const dur = s => s.replace(/(\d+) 小时/g, '$1 h').replace(/(\d+) 分钟/g, '$1 min').replace(/(\d+) 秒/g, '$1 s');
@@ -161,6 +166,9 @@ const I18N = (() => {
     [/^正在下载 (\d+) 项，浏览器可能会询问是否允许下载多个文件$/, m => 'Downloading ' + m[1] + ' items; the browser may ask to allow several downloads'],
     [/^媒体库已刷新，共 (\d+) 个文件$/, m => 'Library reloaded, ' + pl(m[1], 'file')],
     [/^(\d+) 个窗口$/, m => pl(m[1], 'window')],
+    [/^为(?:「(.*)」| (\d+) 个文件)生成一个链接。拿到链接的人不需要密码就能打开，但只能看到被分享的内容。$/, m => 'Create a link for ' + (m[2] ? m[2] + ' files' : '“' + m[1] + '”') + '. Anyone who has the link can open it without a password, and sees only what was shared.'],
+    [/^(?:这个链接将在(.+)后失效。|这个链接长期有效，直到你撤销它。)它只在能访问到这台服务器的网络里有效（通常是同一个 Wi-Fi 或局域网）。$/, m => (m[1] ? 'This link stops working after ' + tr(m[1]).toLowerCase() + '. ' : 'This link works until you revoke it. ') + 'It only works where this server can be reached (usually the same Wi-Fi or LAN).'],
+    [/^生成失败：(.*)$/, m => 'Could not create the link: ' + tr(m[1])],
     [/^将永久删除(?:「(.*)」| (\d+) 项)(（其中文件夹会连同里面的全部内容一起删除）)?。此操作无法撤销。$/, m => 'This permanently deletes ' + (m[2] ? m[2] + ' items' : '“' + m[1] + '”') + (m[3] ? ' (folders are deleted together with everything inside them)' : '') + '. It cannot be undone.'],
   ];
   const SUB = [['：已经在这个文件夹里', ': already in this folder'], ['：不能放进它自己里面', ': cannot be put inside itself'], ['：没有权限执行这个操作', ': no permission'], [/ 等 (\d+) 项失败/, ' … $1 failed in total'], [/；/g, '; ']];
@@ -830,6 +838,7 @@ async function viewFiles(v) {
       ${canM ? `<button class="chip" data-act="fm-rename"${one ? '' : ' disabled'}>${ico('edit')}重命名</button><button class="chip" data-act="fm-move"${n ? '' : ' disabled'}>${ico('move')}移动到</button>` : ''}
       <button class="chip" data-act="fm-copy"${n ? '' : ' disabled'}>${ico('copy')}复制到</button>
       <button class="chip" data-act="fm-dl"${n ? '' : ' disabled'}>${ico('dl')}下载</button>
+      <button class="chip" data-act="fm-share"${n ? '' : ' disabled'}>${ico('link')}分享</button>
       ${canD ? `<button class="chip danger" data-act="fm-del"${n ? '' : ' disabled'}>${ico('trash')}删除</button>` : ''}
       <div class="sp"></div><button class="chip on" data-act="selmode">${ico('check')}完成</button>
     </div>` : `<div class="bar">
@@ -983,6 +992,48 @@ async function opDelete(ts) {
   if (errs.length) toast(errs.slice(0, 3).join('；'), true);
   afterOp();
 }
+// Share links: copyparty serves the chosen files at /share/<key>/ to anyone who has the link, no login needed.
+function copyText(txt, input) {
+  const ok = () => toast('链接已复制');
+  try { input.focus(); input.select(); if (document.execCommand('copy')) return ok(); } catch (e) { /* fall through */ }
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(txt).then(ok, () => toast('请手动复制链接'));
+  toast('请手动复制链接');
+}
+function opShare(ts) {
+  if (!ts.length) return;
+  const dirs = ts.filter(t => t.isDir), parent = p => p.slice(0, p.lastIndexOf('/'));
+  if (dirs.length && ts.length > 1) return toast('一次只能分享一个文件夹，或者同一文件夹里的若干文件', true);
+  if (ts.some(t => parent(t.p) !== parent(ts[0].p))) return toast('一次分享的文件必须在同一个文件夹里', true);
+  const what = ts.length === 1 ? '「' + ts[0].name + '」' : ' ' + ts.length + ' 个文件';
+  let exp = 1440;
+  const opts = [[60, '1 小时'], [1440, '1 天'], [10080, '7 天'], [0, '永久']];
+  const m = modal(`<h3>生成分享链接</h3>
+    <p class="mhint" style="margin-top:0">为${esc(what)}生成一个链接。拿到链接的人不需要密码就能打开，但只能看到被分享的内容。</p>
+    <p class="mhint" style="margin-bottom:8px">有效期</p>
+    <div class="seg shexp">${opts.map(o => `<button data-e="${o[0]}" class="${o[0] === exp ? 'on' : ''}">${o[1]}</button>`).join('')}</div>
+    <div class="macts"><button class="btn sm" data-m="cancel">取消</button><button class="btn sm acc" data-m="ok">生成链接</button></div>`);
+  m.addEventListener('click', async e => {
+    const x = e.target.closest('[data-e]');
+    if (x) { exp = +x.dataset.e; $$('.shexp button', m).forEach(b => b.classList.toggle('on', b === x)); return; }
+    const c = e.target.closest('[data-m]'); if (!c) return;
+    if (c.dataset.m === 'copy') return copyText($('.minp', m).value, $('.minp', m));
+    if (c.dataset.m !== 'ok') return m.close(null);
+    c.disabled = true;
+    const key = Array.from({ length: 12 }, () => 'abcdefghijkmnpqrstuvwxyz23456789'[Math.floor(Math.random() * 32)]).join('');
+    try {
+      const r = await fetch('/?share', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ k: key, vp: ts.map(t => '/' + t.p + (t.isDir ? '/' : '')), pw: '', exp: exp ? String(exp) : '', perms: ['read'] }) });
+      const txt = await r.text();
+      const url = (/created share:\s*(\S+)/.exec(txt) || [])[1];
+      if (!r.ok || !url) throw new Error(/sharing must be disabled/.test(txt) ? '服务器没有开启分享功能' : /server busy/.test(txt) ? '服务器正在建立索引，请稍后再试' : r.status === 403 ? '没有权限执行这个操作' : txt.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) || 'HTTP ' + r.status);
+      $('.mbox', m).innerHTML = `<h3>分享链接已生成</h3>
+        <input class="minp" type="text" readonly value="${esc(url)}">
+        <p class="mhint">${exp ? '这个链接将在' + esc(opts.find(o => o[0] === exp)[1]) + '后失效。' : '这个链接长期有效，直到你撤销它。'}它只在能访问到这台服务器的网络里有效（通常是同一个 Wi-Fi 或局域网）。</p>
+        <p class="mhint"><a href="/?shares" target="_blank" rel="noopener" style="color:#ffb27a">查看和撤销已有的分享链接 →</a></p>
+        <div class="macts"><button class="btn sm" data-m="cancel">关闭</button><button class="btn sm acc" data-m="copy">复制链接</button></div>`;
+      setTimeout(() => { const i = $('.minp', m); if (i) i.select(); }, 30);
+    } catch (er) { c.disabled = false; toast('生成失败：' + er.message, true); }
+  });
+}
 function opDownload(ts) {
   ts.forEach((t, i) => setTimeout(() => {
     const a = document.createElement('a'); a.href = t.isDir ? vurl(t.p) + '/?zip' : vurl(t.p); a.download = t.isDir ? t.name + '.zip' : t.name;
@@ -996,7 +1047,7 @@ function ctxMenu(x, y, t, it) {
   const inFiles = S.view === 'files', canM = !inFiles || S.dirPerms.includes('move'), canD = !inFiles || S.dirPerms.includes('delete');
   const b = (k, ic, l, cls) => `<button data-c="${k}"${cls ? ` class="${cls}"` : ''}>${ico(ic)}<span class="lb">${l}</span></button>`;
   el.innerHTML = `<div class="ph" data-nt>${esc(t.name)}</div>` + b('open', t.isDir ? 'folder' : 'playo', '打开') + (it ? b('info', 'info', '详情') + b('fav', 'heart', isFav(it.p) ? '取消收藏' : '收藏') : '') +
-    b('dl', t.isDir ? 'zip' : 'dl', t.isDir ? '打包下载' : '下载') + '<div class="sep"></div>' +
+    b('dl', t.isDir ? 'zip' : 'dl', t.isDir ? '打包下载' : '下载') + b('share', 'link', '分享链接…') + '<div class="sep"></div>' +
     (canM ? b('rename', 'edit', '重命名') + b('move', 'move', '移动到…') : '') + b('copy', 'copy', '复制到…') + (!t.isDir ? b('reveal', 'folder', '打开所在文件夹') : '') +
     (canD ? '<div class="sep"></div>' + b('del', 'trash', '删除', 'dng') : '');
   document.body.appendChild(el);
@@ -1007,7 +1058,7 @@ function ctxMenu(x, y, t, it) {
     const k = (e.target.closest('button') || {}).dataset; if (!k) return; closePop();
     const c = k.c;
     if (c === 'open') { if (t.isDir) go('#/files/' + enc(t.p.slice(ROOT.length + 1))); else if (it) openItem(it, null); }
-    else if (c === 'info') showInfo(it); else if (c === 'fav') toggleFav(it.p); else if (c === 'dl') opDownload([t]);
+    else if (c === 'info') showInfo(it); else if (c === 'fav') toggleFav(it.p); else if (c === 'dl') opDownload([t]); else if (c === 'share') opShare([t]);
     else if (c === 'rename') opRename(t); else if (c === 'move') opMoveCopy([t], false); else if (c === 'copy') opMoveCopy([t], true);
     else if (c === 'reveal') go('#/files/' + enc(it.rel)); else if (c === 'del') opDelete([t]);
   });
@@ -1062,6 +1113,7 @@ function settingsPop(anchor) {
     <button data-s="clear">${ico('clock')}<span class="lb">清除观看记录</span></button>
     <div class="sep"></div>
     <button data-s="libs">${ico('folder')}<span class="lb">媒体目录（添加 / 移除）</span></button>
+    <a href="/?shares" target="_blank" rel="noopener"><button type="button" data-s="classic">${ico('link')}<span class="lb">管理分享链接</span></button></a>
     <a href="/${ROOT}/" target="_blank" rel="noopener"><button type="button" data-s="classic">${ico('ext')}<span class="lb">经典界面（上传 / 管理）</span></button></a>
     <button data-s="logout">${ico('out')}<span class="lb">退出登录</span></button>`,
   b => {
@@ -1100,6 +1152,7 @@ function showInfo(it) {
         ${it.kind === 'v' && st ? `<button class="btn" data-act="restart" data-p="${esc(it.p)}">从头播放</button>` : ''}
         <button class="btn sq${isFav(it.p) ? ' on' : ''}" data-act="fav" data-p="${esc(it.p)}" title="收藏">${ico('heart')}</button>
         <a class="btn sq" href="${esc(it.url)}" download="${esc(it.name)}" title="下载">${ico('dl')}</a>
+        <button class="btn sq" data-act="share" data-p="${esc(it.p)}" title="生成分享链接">${ico('link')}</button>
         <button class="btn sq" data-act="reveal" data-p="${esc(it.p)}" title="打开所在文件夹">${ico('folder')}</button>
         <button class="btn sq" data-act="ren" data-p="${esc(it.p)}" title="重命名">${ico('edit')}</button>
         <button class="btn sq" data-act="mv" data-p="${esc(it.p)}" title="移动到…">${ico('move')}</button>
@@ -1559,6 +1612,8 @@ document.addEventListener('click', e => {
     else if (act === 'fm-move') opMoveCopy(selTargets(), false);
     else if (act === 'fm-copy') opMoveCopy(selTargets(), true);
     else if (act === 'fm-dl') opDownload(selTargets());
+    else if (act === 'fm-share') opShare(selTargets());
+    else if (act === 'share' && it) opShare([tgtOf(it.p)]);
     else if (act === 'fm-del') opDelete(selTargets());
     else if (act === 'ren' && it) opRename(tgtOf(it.p));
     else if (act === 'mv' && it) opMoveCopy([tgtOf(it.p)], false);

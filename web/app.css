@@ -360,6 +360,9 @@ h2.sec .more:hover { color: var(--fg); background: rgba(255, 255, 255, .07); }
 .macts { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
 .macts .btn:disabled { opacity: .4; cursor: default; }
 .pfc { margin: 0 0 10px; font-size: 13px; }
+.shexp { display: inline-flex; }
+.shexp button { height: 34px; padding: 0 16px; font-size: 13.5px; border-radius: 15px; }
+.minp[readonly] { font-size: 13.5px; color: #ffd9a6; }
 .pfl { display: flex; flex-direction: column; gap: 2px; max-height: 320px; overflow: auto; padding: 6px; border-radius: 12px; background: rgba(0, 0, 0, .22); border: 1px solid var(--line); }
 .pfr { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 6px 10px; border-radius: 9px; text-align: left; width: 100%; color: var(--fg); }
 .pfr:hover { background: rgba(255, 255, 255, .08); }

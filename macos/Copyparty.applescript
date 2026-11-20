@@ -1,4 +1,4 @@
-property appVer : "wall-5"
+property appVer : "wall-6"
 property portNum : "3923"
 property pageUrl : "http://127.0.0.1:3923/"
 property procMark : "copyparty-sfx.py -c "
@@ -295,7 +295,7 @@ on run
 	do shell script "/bin/mkdir -p " & quoted form of (cfgDir() & "/state") & " " & quoted form of (cfgDir() & "/hist") & " " & quoted form of (cfgDir() & "/mediaroot") & " && /bin/rm -rf " & quoted form of wallDir & " && /bin/cp -R " & quoted form of ((POSIX path of (path to me)) & "Contents/Resources/wall") & " " & quoted form of wallDir
 	set cfg to "[global]" & linefeed & "  i: 0.0.0.0" & linefeed & "  p: " & portNum & linefeed & "  q" & linefeed & "  grid" & linefeed & ¬
 		"  e2dsa" & linefeed & "  e2ts" & linefeed & "  no-hash: ." & linefeed & "  re-maxage: 300" & linefeed & "  srch-hits: 200000" & linefeed & ¬
-		"  hist: " & cfgDir() & "/hist" & linefeed & linefeed & ¬
+		"  hist: " & cfgDir() & "/hist" & linefeed & "  shr: /share" & linefeed & "  shr-db: " & cfgDir() & "/shares.db" & linefeed & linefeed & ¬
 		"[accounts]" & linefeed & "  " & (item 1 of acct) & ": " & (item 2 of acct) & linefeed & linefeed & ¬
 		"[/]" & linefeed & "  " & wallDir & linefeed & "  accs:" & linefeed & "    h: *" & linefeed & "  flags:" & linefeed & "    d2d" & linefeed & linefeed & ¬
 		volumeConfig(fl, perm, item 1 of acct) & ¬
