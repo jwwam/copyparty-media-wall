@@ -129,10 +129,15 @@ try:
     ls = json.loads(body.decode("utf-8")) if st == 200 else {}
     names = sorted(urllib.parse.unquote(x["href"]) for x in ls.get("dirs", []))
     check("login works and both libraries are mounted", st == 200 and names == ["docs/", "media/"], names)
-    time.sleep(3)
-    st, body, _ = call(U + "/media/?srch", data=json.dumps({"q": "name like *", "n": 999}).encode(), headers={"Content-Type": "text/plain"}, jar=cj)
-    hits = [urllib.parse.unquote(h["rp"]) for h in json.loads(body.decode("utf-8")).get("hits", [])] if st == 200 else []
-    check("the index finds files, including non-ASCII names", any(h.endswith("picture.png") and "照片" in h for h in hits), hits)
+    hits, last = [], ""
+    for _ in range(40):  # the first scan runs in the background after start-up
+        st, body, _ = call(U + "/media/?srch", data=json.dumps({"q": "name like *", "n": 999}).encode(), headers={"Content-Type": "text/plain"}, jar=cj)
+        last = "%s %s" % (st, body[:200])
+        hits = [urllib.parse.unquote(h["rp"]) for h in json.loads(body.decode("utf-8")).get("hits", [])] if st == 200 else []
+        if any(h.endswith("picture.png") for h in hits):
+            break
+        time.sleep(1)
+    check("the index finds files, including non-ASCII names", any(h.endswith("picture.png") and "照片" in h for h in hits), hits or last)
     purl = U + "/media/media/" + urllib.parse.quote("照片 photos/picture.png")
     st, body, hd = call(purl + "?th=jf3", jar=cj)
     check("image thumbnail is generated", st == 200 and "jpeg" in hd.get("Content-Type", ""), hd.get("Content-Type"))
@@ -187,6 +192,7 @@ finally:
                 pass
         try:
             print("---- copyparty.log ----\n%s" % open(os.path.join(cfg, "copyparty.log"), encoding="utf-8", errors="replace").read()[-3000:])
+            print("---- copyparty.conf (password removed) ----\n%s" % "\n".join(l for l in open(os.path.join(cfg, "copyparty.conf"), encoding="utf-8").read().split("\n") if "tester:" not in l or "accs" in l))
         except OSError:
             pass
     shutil.rmtree(tmp, ignore_errors=True)
