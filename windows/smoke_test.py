@@ -198,6 +198,14 @@ finally:
             print("---- copyparty.conf (password removed) ----\n%s" % "\n".join(l for l in open(os.path.join(cfg, "copyparty.conf"), encoding="utf-8").read().split("\n") if "tester:" not in l or "accs" in l))
         except OSError:
             pass
+    if A.debug:
+        try:
+            import re as _re
+            txt = _re.sub(r"\x1b\[[0-9;]*m", "", open(os.path.join(cfg, "copyparty.log"), encoding="utf-8", errors="replace").read())
+            keep = [l for l in txt.split("\n") if _re.search(r"WARN|ERR|CRIT|sqlite|lock|could not|incompat|up2k|hist", l)]
+            print("---- notable copyparty log lines ----\n" + "\n".join(keep[:80]))
+        except OSError:
+            pass
     shutil.rmtree(tmp, ignore_errors=True)
 
 print("\n%d failed" % len(fails) if fails else "\nall checks passed")
