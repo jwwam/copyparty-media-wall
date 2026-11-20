@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 452" width="1000" height="452" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif" role="img" aria-label="How it fits together">
+<defs><linearGradient id="acc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset=".6" stop-color="#ff6a3d"/><stop offset="1" stop-color="#ff5e62"/></linearGradient><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 9 5 1 9z" fill="#ff8a3d"/></marker></defs>
+<rect x="1" y="1" width="998" height="450" rx="22" fill="#0f1218" stroke="#2a303c" stroke-width="2"/>
+<rect x="26" y="34" width="250" height="330" rx="18" fill="#171b24" stroke="#2a303c" stroke-width="1.5"/>
+<text x="151.0" y="68" text-anchor="middle" fill="#eef1f6" font-size="17" font-weight="700">Your media folders</text>
+<rect x="332" y="34" width="336" height="330" rx="18" fill="#171b24" stroke="#2a303c" stroke-width="1.5"/>
+<text x="500.0" y="68" text-anchor="middle" fill="#eef1f6" font-size="17" font-weight="700">One computer at home</text>
+<rect x="724" y="34" width="250" height="330" rx="18" fill="#171b24" stroke="#2a303c" stroke-width="1.5"/>
+<text x="849.0" y="68" text-anchor="middle" fill="#eef1f6" font-size="17" font-weight="700">Any browser, no app needed</text>
+<rect x="46" y="100" width="210" height="52" rx="12" fill="#1f2430"/><path d="M60 114a5 5 0 0 1 5-5h11l6 7h19a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H65a5 5 0 0 1-5-5z" fill="#ff8a3d" fill-opacity=".22" stroke="#ff8a3d" stroke-width="2"/>
+<text x="122" y="132" fill="#dfe4ee" font-size="15" font-weight="600">Movies and shows</text>
+<rect x="46" y="166" width="210" height="52" rx="12" fill="#1f2430"/><path d="M60 180a5 5 0 0 1 5-5h11l6 7h19a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H65a5 5 0 0 1-5-5z" fill="#5ab0ff" fill-opacity=".22" stroke="#5ab0ff" stroke-width="2"/>
+<text x="122" y="198" fill="#dfe4ee" font-size="15" font-weight="600">Photos</text>
+<rect x="46" y="232" width="210" height="52" rx="12" fill="#1f2430"/><path d="M60 246a5 5 0 0 1 5-5h11l6 7h19a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H65a5 5 0 0 1-5-5z" fill="#7ddc8f" fill-opacity=".22" stroke="#7ddc8f" stroke-width="2"/>
+<text x="122" y="264" fill="#dfe4ee" font-size="15" font-weight="600">Music</text>
+<text x="151" y="336" text-anchor="middle" fill="#8b94a6" font-size="13">Files stay where they are</text>
+<rect x="356" y="92" width="288" height="66" rx="14" fill="#231a14" stroke="url(#acc)" stroke-width="2"/>
+<rect x="372" y="107" width="36" height="36" rx="10" fill="url(#acc)"/><path d="M385 116v18l15-9z" fill="#14100c"/>
+<text x="420" y="121" fill="#ffffff" font-size="17" font-weight="700">Media Wall</text><text x="420" y="143" fill="#ffc49b" font-size="12.5">this project · the pages you see</text>
+<path d="M500 160v14" stroke="#4a5263" stroke-width="2" stroke-dasharray="3 4"/>
+<rect x="356" y="176" width="288" height="66" rx="14" fill="#1f2430" stroke="#3a4252" stroke-width="1.5"/>
+<rect x="372" y="191" width="36" height="36" rx="10" fill="#2c3445"/><path d="M381 203h18M381 209h18M381 215h12" stroke="#a9b1c0" stroke-width="2.4" stroke-linecap="round"/>
+<text x="420" y="205" fill="#ffffff" font-size="17" font-weight="700">copyparty</text><text x="420" y="227" fill="#a9b1c0" font-size="12.5">file server · index · thumbnails</text>
+<text x="500" y="270" text-anchor="middle" fill="#8b94a6" font-size="12.5" letter-spacing="1">Runs on</text>
+<rect x="352" y="282" width="92" height="30" rx="15" fill="#16301f" stroke="#3fae62" stroke-width="1.5"/><text x="398" y="302" text-anchor="middle" fill="#8fe3a8" font-size="13" font-weight="600">✓ macOS</text>
+<rect x="452" y="282" width="196" height="30" rx="15" fill="#16301f" stroke="#3fae62" stroke-width="1.5"/><text x="550" y="302" text-anchor="middle" fill="#8fe3a8" font-size="13" font-weight="600">✓ Linux · NAS · Docker</text>
+<rect x="410" y="320" width="180" height="30" rx="15" fill="none" stroke="#596274" stroke-width="1.5" stroke-dasharray="5 4"/><text x="500" y="340" text-anchor="middle" fill="#9aa3b5" font-size="13" font-weight="600">Windows · soon</text>
+<g stroke="#dfe4ee" stroke-width="2.4" fill="none" stroke-linejoin="round" stroke-linecap="round"><rect x="752" y="118" width="74" height="50" rx="5" fill="#1f2430"/><path d="M742 176h94"/><rect x="862" y="110" width="34" height="66" rx="7" fill="#1f2430"/><path d="M874 168h10"/><rect x="914" y="114" width="46" height="62" rx="6" fill="#1f2430"/><path d="M932 168h10"/></g>
+<path d="M782 133v20l16-10z" fill="#ff8a3d"/><path d="M875 135v14l11-7z" fill="#ff8a3d"/><path d="M932 137v14l11-7z" fill="#ff8a3d"/>
+<text x="789" y="200" text-anchor="middle" fill="#a9b1c0" font-size="12.5">Mac / PC</text>
+<text x="879" y="200" text-anchor="middle" fill="#a9b1c0" font-size="12.5">Phone</text>
+<text x="937" y="200" text-anchor="middle" fill="#a9b1c0" font-size="12.5">Tablet</text>
+<g fill="none" stroke="#5ab0ff" stroke-width="2.6" stroke-linecap="round"><path d="M825 262a34 34 0 0 1 48 0"/><path d="M834 273a21 21 0 0 1 30 0"/></g><circle cx="849" cy="285" r="4" fill="#5ab0ff"/>
+<text x="849" y="336" text-anchor="middle" fill="#8b94a6" font-size="13">On the same Wi-Fi or LAN</text>
+<path d="M282 200H326" stroke="#ff8a3d" stroke-width="2.6" marker-end="url(#ar)"/><text x="304" y="188" text-anchor="middle" fill="#ffc49b" font-size="12">reads</text>
+<path d="M674 200H718" stroke="#ff8a3d" stroke-width="2.6" marker-end="url(#ar)"/><text x="696" y="188" text-anchor="middle" fill="#ffc49b" font-size="12">Wi-Fi</text>
+<text x="500" y="412" text-anchor="middle" fill="#c9d0dc" font-size="15" xml:space="preserve">Open  http://your-computer:3923  and log in with one password</text>
+</svg>

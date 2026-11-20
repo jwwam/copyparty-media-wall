@@ -1,10 +1,16 @@
+<p align="center"><a href="README.md">English</a> &nbsp;|&nbsp; <b>简体中文</b></p>
+
 # copyparty-media-wall · 影音库
 
 **给 [copyparty](https://github.com/9001/copyparty) 做的电影墙界面。** 把 copyparty 文件服务器变成私人影音库：封面墙、筛选、收藏、续播、可自由摆放的多窗口播放。不改 copyparty 一行代码，也不需要额外的服务。
 
-[English](README.md) · [下载](#下载) · [手动部署](#手动部署任意系统)
+[下载](#下载) · [手动部署](#手动部署任意系统) · [界面展示](#多个视频同时播放)
 
-![多个视频在浮动窗口里同时播放](docs/shots/multi-window.jpg)
+![整体方案：你的媒体文件夹、一台运行 copyparty 和影音库的电脑、局域网内的任意浏览器](docs/overview.zh.svg)
+
+**一句话：** 在一台电脑上指定存放电影、照片、音乐的文件夹，局域网里的所有电脑、手机、平板打开浏览器就有一个影音库，它们什么都不用装。
+
+![四个视频在同一个页面里同时播放](docs/shots/multi-video.gif)
 
 > 本项目建立在 [9001](https://github.com/9001) 的 **[copyparty](https://github.com/9001/copyparty)** 之上。存储、索引、缩略图、账号这些真正的工作都是 copyparty 完成的，本项目只是一组调用它标准 HTTP 接口的静态页面。觉得好用，请先去给 copyparty 点个 star。
 
@@ -27,9 +33,13 @@
 
 这是文件服务器和大多数影音库没有的能力：播放发生在页面内的窗口里，所以可以同时放不止一个。
 
-**一起全屏**：点一下，所有打开的窗口组成一面视频墙。
+**浮动窗口**：可以拖到任意位置、从任意边缘缩放，叠在片库上面。
 
-![四个视频一起全屏](docs/shots/multi-fullscreen.jpg)
+![多个视频在浮动窗口里同时播放](docs/shots/multi-window.jpg)
+
+**平铺**：点一下，所有打开的窗口排成一面视频墙；再点一下整面墙一起全屏。本页顶部的动图就是这个布局，从真实页面录制。
+
+![四个视频平铺并同时播放](docs/shots/multi-tile.jpg)
 
 **边浏览边播放**：把播放窗口缩到角落，继续翻看片库。
 
@@ -45,7 +55,7 @@
 | ![续播](docs/shots/player.jpg) 从上次的位置继续 | ![详情](docs/shots/detail.jpg) 详情面板 |
 | ![文件管理](docs/shots/files.jpg) 文件管理和多选 | ![登录](docs/shots/login.jpg) 登录页 |
 
-截图里的封面都是脚本生成的示例图，不是真实影片。
+截图里的视频和图片（行人、街景、美食、天空、海面）都是为演示用脚本绘制的，不是真实影片。
 
 ## 下载
 
