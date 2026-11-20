@@ -31,7 +31,7 @@ os.makedirs(os.path.join(media, "照片 photos"))
 os.makedirs(os.path.join(media, "docs"))
 with open(os.path.join(media, "docs", "note.txt"), "w", encoding="utf-8") as f:
     f.write("hello from the smoke test")
-env = dict(os.environ, WALL_CFG=cfg, WALL_HELPER_PORT=str(HP), WALL_PORT=str(CP), PYTHONPATH=os.path.join(A.app, "pylib"))
+env = dict(os.environ, WALL_DEBUG="1", WALL_CFG=cfg, WALL_HELPER_PORT=str(HP), WALL_PORT=str(CP), PYTHONPATH=os.path.join(A.app, "pylib"))
 fails = []
 
 
@@ -191,7 +191,7 @@ finally:
             except OSError:
                 pass
         try:
-            print("---- copyparty.log ----\n%s" % open(os.path.join(cfg, "copyparty.log"), encoding="utf-8", errors="replace").read()[-3000:])
+            print("---- copyparty.log ----\n%s" % open(os.path.join(cfg, "copyparty.log"), encoding="utf-8", errors="replace").read()[-9000:])
             print("---- copyparty.conf (password removed) ----\n%s" % "\n".join(l for l in open(os.path.join(cfg, "copyparty.conf"), encoding="utf-8").read().split("\n") if "tester:" not in l or "accs" in l))
         except OSError:
             pass

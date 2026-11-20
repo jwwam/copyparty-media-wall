@@ -243,7 +243,8 @@ def write_config():
     for n in os.listdir(WALL_SRC):
         with open(os.path.join(WALL_SRC, n), "rb") as a, open(os.path.join(wall, n), "wb") as b:
             b.write(a.read())
-    cfg = ("[global]\n  i: 0.0.0.0\n  p: %d\n  q\n  grid\n  e2dsa\n  e2ts\n  no-hash: .\n  re-maxage: 300\n  srch-hits: 200000\n"
+    quiet = "" if os.environ.get("WALL_DEBUG") else "  q\n"  # full copyparty logging when debugging
+    cfg = ("[global]\n  i: 0.0.0.0\n  p: %d\n" + quiet + "  grid\n  e2dsa\n  e2ts\n  no-hash: .\n  re-maxage: 300\n  srch-hits: 200000\n"
            "  hist: %s\n  shr: /share\n  shr-db: %s\n\n[accounts]\n  %s: %s\n\n"
            "[/]\n  %s\n  accs:\n    h: *\n  flags:\n    d2d\n\n%s"
            "[/.wallstate]\n  %s\n  accs:\n    rwd: %s\n  flags:\n    d2d\n") % (
