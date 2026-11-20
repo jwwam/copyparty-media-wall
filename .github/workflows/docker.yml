@@ -1,0 +1,89 @@
+name: Docker image
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+    paths: ["web/**", "docker/**", ".github/workflows/docker.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/jwwam/copyparty-media-wall
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build for this machine
+        run: docker build -f docker/Dockerfile -t wall-test .
+
+      - name: Prepare a small library
+        run: |
+          mkdir -p "$RUNNER_TEMP/media/照片 photos" "$RUNNER_TEMP/media/docs" "$RUNNER_TEMP/data" "$RUNNER_TEMP/data-ro"
+          chmod -R 777 "$RUNNER_TEMP/media" "$RUNNER_TEMP/data" "$RUNNER_TEMP/data-ro"
+          printf 'hello from the smoke test' > "$RUNNER_TEMP/media/docs/note.txt"
+          # picture and video are made with the tools inside the image, which also proves they are there
+          docker run --rm --entrypoint python3 -v "$RUNNER_TEMP/media:/media" wall-test -c "from PIL import Image; Image.new('RGB',(640,360),(200,90,40)).save('/media/照片 photos/picture.png')"
+          docker run --rm --entrypoint ffmpeg -v "$RUNNER_TEMP/media:/media" wall-test -loglevel error -y -f lavfi -i testsrc=duration=3:size=320x180:rate=10 -pix_fmt yuv420p /media/docs/clip.mp4
+          ls -la "$RUNNER_TEMP/media/docs" "$RUNNER_TEMP/media/照片 photos"
+
+      - name: Refuses to start without a password
+        run: |
+          if docker run --rm wall-test; then echo "started without a password"; exit 1; fi
+          if docker run --rm -e WALL_PASSWORD=short wall-test; then echo "accepted a short password"; exit 1; fi
+          echo "refused, as it should"
+
+      - name: Read-write container
+        run: |
+          docker run -d --name wall-rw -p 3923:3923 -e WALL_PASSWORD=Smoke-pw_123 -e WALL_PERM=rw -v "$RUNNER_TEMP/media:/media" -v "$RUNNER_TEMP/data:/data" wall-test
+          python3 docker/smoke_test.py --url http://127.0.0.1:3923 --password Smoke-pw_123 --media "$RUNNER_TEMP/media" || { docker logs wall-rw; exit 1; }
+          docker logs wall-rw 2>&1 | tail -5
+          docker rm -f wall-rw
+
+      - name: Read-only container, as a non-root user
+        run: |
+          rm -f "$RUNNER_TEMP/media/docs/uploaded.txt"
+          docker run -d --name wall-ro -u 1000:1000 -p 3924:3923 -e WALL_USER=alice -e WALL_PASSWORD=Other-pw_456 -v "$RUNNER_TEMP/media:/media:ro" -v "$RUNNER_TEMP/data-ro:/data" wall-test
+          python3 docker/smoke_test.py --url http://127.0.0.1:3924 --password Other-pw_456 --media "$RUNNER_TEMP/media" --readonly || { docker logs wall-ro; exit 1; }
+          docker rm -f wall-ro
+
+      - name: Settings survive a restart
+        run: |
+          docker run -d --name wall-again -p 3925:3923 -e WALL_PASSWORD=Smoke-pw_123 -e WALL_PERM=rw -v "$RUNNER_TEMP/media:/media" -v "$RUNNER_TEMP/data:/data" wall-test
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:3925/ && break; sleep 0.5; done
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3925/share/smokekeyw/note.txt)
+          echo "share link from the first run after a restart: $code"
+          test "$code" = "200"
+          docker rm -f wall-again
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+      - name: Build for all platforms and publish
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

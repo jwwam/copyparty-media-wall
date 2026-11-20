@@ -1,0 +1,26 @@
+# copyparty-media-wall with Docker Compose.
+# 1. change the password and the paths on the left of each ":" below
+# 2. docker compose up -d
+# 3. open http://<this-machine>:3923/
+services:
+  media-wall:
+    image: ghcr.io/jwwam/copyparty-media-wall:latest
+    container_name: media-wall
+    restart: unless-stopped
+    ports:
+      - "3923:3923"
+    environment:
+      WALL_USER: wall
+      WALL_PASSWORD: change-this-password   # at least 8 characters, no spaces
+      WALL_PERM: r                          # r = read-only, rw = upload, rename, move, delete
+      TZ: Asia/Shanghai
+    volumes:
+      # one library:
+      - /path/to/your/media:/media
+      # or several libraries side by side (remove the line above):
+      # - /path/to/movies:/media/Movies
+      # - /path/to/photos:/media/Photos
+      # settings, index, thumbnails, watch history and share links:
+      - ./data:/data
+    # run as your own user so files created by uploads belong to you (find the numbers with: id -u ; id -g)
+    # user: "1000:1000"
