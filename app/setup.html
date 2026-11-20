@@ -196,7 +196,7 @@ function keep() { const u = $('#u'); if (u && draft) { draft.user = u.value.trim
 function dash() {
   if (!draft) draft = { user: st.user, password: '', password2: '', folders: st.folders.slice(), perm: st.perm };
   const busy = st.start_job.state === 'busy', sj = st.start_job;
-  const stat = busy ? [L(sj.msg === 'pillow' ? '正在安装缩略图组件（首次需要约 10 秒）…' : '正在启动…', sj.msg === 'pillow' ? 'Installing the thumbnail component (about 10 seconds the first time)…' : 'Starting…'), 'busy']
+  const stat = busy ? [L(sj.msg === 'pillow' ? '正在安装缩略图组件（首次需要约 10 秒）…' : sj.msg === 'index' ? '正在准备媒体索引…' : '正在启动…', sj.msg === 'pillow' ? 'Installing the thumbnail component (about 10 seconds the first time)…' : sj.msg === 'index' ? 'Preparing the media index…' : 'Starting…'), 'busy']
     : st.running ? [L('影音库正在运行', 'The library is running'), 'on'] : [L('服务已停止', 'The service is stopped'), ''];
   root.innerHTML = `<div class="card">
       <div class="kv"><div class="stat"><i class="dot ${stat[1]}"></i>${stat[0]}</div><div class="sp"></div>

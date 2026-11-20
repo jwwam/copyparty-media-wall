@@ -7,7 +7,7 @@ cannot do on its own: pick folders on disk, write the copyparty config, fetch
 FFmpeg, and start or stop copyparty. Standard library only.
 """
 import json, os, platform, re, secrets, signal, socket, string, subprocess, sys, tempfile, threading, time, zipfile
-import urllib.request
+import urllib.error, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
@@ -257,6 +257,71 @@ def configured():
     return bool(account() and folders() and perm())
 
 
+def index_dbs():
+    out = []
+    for base, _, files in os.walk(os.path.join(CFG, "hist")):
+        if "up2k.db" in files:
+            out.append(os.path.join(base, "up2k.db"))
+    return out
+
+
+def search_state():
+    """'ok', 'busy' (index not ready yet) or 'broken' (copyparty cannot open an index database)."""
+    try:
+        from http.cookiejar import CookieJar
+        user, pw = account()
+        op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(CookieJar()))
+        base = "http://127.0.0.1:%d" % CPP_PORT
+        bnd = "----wallhelper"
+        form = "".join('--%s\r\nContent-Disposition: form-data; name="%s"\r\n\r\n%s\r\n' % (bnd, k, v) for k, v in (("act", "login"), ("cppwd", pw))) + "--%s--\r\n" % bnd
+        op.open(urllib.request.Request(base + "/", data=form.encode("utf-8"), headers={"Content-Type": "multipart/form-data; boundary=" + bnd}), timeout=20).read()
+        req = urllib.request.Request(base + "/media/?srch", data=json.dumps({"q": "name like *", "n": 1}).encode("utf-8"), headers={"Content-Type": "text/plain"})
+        try:
+            op.open(req, timeout=30).read()
+            return "ok"
+        except urllib.error.HTTPError as ex:
+            body = ex.read().decode("utf-8", "replace")
+            return "broken" if "unable to open database" in body else "busy"
+    except Exception:
+        return "busy"
+
+
+def settle_index():
+    """Windows only. If a search reaches copyparty while it is still creating its index databases, it keeps a
+    read-only handle that never works again until a restart. So: wait until the databases exist, then probe once."""
+    last, stable = -1, 0
+    for _ in range(120):
+        n = len(index_dbs())
+        stable = stable + 1 if (n == last and n > 0) else 0
+        last = n
+        if stable >= 6:
+            break
+        time.sleep(0.5)
+    for _ in range(30):
+        r = search_state()
+        if r != "busy":
+            return r
+        time.sleep(1)
+    return "ok"
+
+
+def launch_cpp():
+    os.makedirs(os.path.dirname(LOG), exist_ok=True)
+    e = dict(os.environ, PATH=env_path(), PYTHONPATH=PYLIB, PYTHONIOENCODING="utf-8")
+    kw = {"creationflags": NOWIN | 0x00000200} if WIN else {"start_new_session": True}  # + CREATE_NEW_PROCESS_GROUP
+    with open(LOG, "wb") as lf:
+        p = subprocess.Popen([PY, SFX, "-c", CONF], stdin=subprocess.DEVNULL, stdout=lf, stderr=lf,
+                             cwd=tempfile.gettempdir(), env=e, **kw)
+    wr("copyparty.pid", str(p.pid))
+    for _ in range(180):
+        if port_open(CPP_PORT):
+            return
+        if p.poll() is not None:
+            raise RuntimeError("copyparty exited, see the log")
+        time.sleep(0.5)
+    raise RuntimeError("timeout")
+
+
 def start_cpp():
     """Runs in a thread: installs Pillow if needed, writes the config, (re)starts copyparty."""
     j = job["start"]
@@ -271,22 +336,16 @@ def start_cpp():
         j.update(state="busy", msg="starting")
         stop_cpp()
         write_config()
-        os.makedirs(os.path.dirname(LOG), exist_ok=True)
-        e = dict(os.environ, PATH=env_path(), PYTHONPATH=PYLIB, PYTHONIOENCODING="utf-8")
-        kw = {"creationflags": NOWIN | 0x00000200} if WIN else {"start_new_session": True}  # + CREATE_NEW_PROCESS_GROUP
-        with open(LOG, "wb") as lf:
-            p = subprocess.Popen([PY, SFX, "-c", CONF], stdin=subprocess.DEVNULL, stdout=lf, stderr=lf,
-                                 cwd=tempfile.gettempdir(), env=e, **kw)
-        wr("copyparty.pid", str(p.pid))
-        for _ in range(180):
-            if port_open(CPP_PORT):
-                wr("running-version", VERSION)
-                j.update(state="done", msg="")
-                return
-            if p.poll() is not None:
-                raise RuntimeError("copyparty exited, see the log")
-            time.sleep(0.5)
-        raise RuntimeError("timeout")
+        launch_cpp()
+        if WIN:
+            j.update(state="busy", msg="index")
+            for _ in range(2):
+                if settle_index() != "broken":
+                    break
+                stop_cpp()  # the databases exist now, so a fresh start opens them cleanly
+                launch_cpp()
+        wr("running-version", VERSION)
+        j.update(state="done", msg="")
     except Exception as ex:
         j.update(state="error", msg=str(ex)[:200])
 
