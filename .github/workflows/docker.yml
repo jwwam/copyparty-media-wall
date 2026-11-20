@@ -29,9 +29,11 @@ jobs:
           mkdir -p "$RUNNER_TEMP/media/照片 photos" "$RUNNER_TEMP/media/docs" "$RUNNER_TEMP/data" "$RUNNER_TEMP/data-ro"
           chmod -R 777 "$RUNNER_TEMP/media" "$RUNNER_TEMP/data" "$RUNNER_TEMP/data-ro"
           printf 'hello from the smoke test' > "$RUNNER_TEMP/media/docs/note.txt"
-          # picture and video are made with the tools inside the image, which also proves they are there
+          # the picture is made with the Pillow inside the image, which also proves it is there
           docker run --rm --entrypoint python3 -v "$RUNNER_TEMP/media:/media" wall-test -c "from PIL import Image; Image.new('RGB',(640,360),(200,90,40)).save('/media/照片 photos/picture.png')"
-          docker run --rm --entrypoint ffmpeg -v "$RUNNER_TEMP/media:/media" wall-test -loglevel error -y -f lavfi -i testsrc=duration=3:size=320x180:rate=10 -pix_fmt yuv420p /media/docs/clip.mp4
+          # the image's FFmpeg is a decode-only build, so the test clip is encoded on the runner
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+          ffmpeg -loglevel error -y -f lavfi -i testsrc=duration=3:size=320x180:rate=10 -c:v libx264 -pix_fmt yuv420p "$RUNNER_TEMP/media/docs/clip.mp4"
           ls -la "$RUNNER_TEMP/media/docs" "$RUNNER_TEMP/media/照片 photos"
 
       - name: Refuses to start without a password
