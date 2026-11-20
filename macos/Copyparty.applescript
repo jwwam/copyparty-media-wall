@@ -1,4 +1,4 @@
-property appVer : "wall-4"
+property appVer : "wall-5"
 property portNum : "3923"
 property pageUrl : "http://127.0.0.1:3923/"
 property procMark : "copyparty-sfx.py -c "

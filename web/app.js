@@ -92,6 +92,112 @@ const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } ca
 const SET = Object.assign({ solo: true, hover: true, auto: true, poster: false, card: 240 }, lsGet('wall.set', {}));
 const saveSet = () => lsSet('wall.set', SET);
 
+/* ---------- language: the UI is written in Chinese and translated in place when English is chosen ---------- */
+const LANG = SET.lang === 'zh' || SET.lang === 'en' ? SET.lang : ((navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en');
+const I18N = (() => {
+  const D = {
+    '影音库': 'Media Wall', '输入访问密码，进入你的私人影音墙': 'Enter the access password to open your private media wall', '访问密码': 'Access password', '显示密码': 'Show password', '进 入': 'Enter',
+    '文件服务由 copyparty 提供': 'File service powered by copyparty', '密码不正确': 'Wrong password', '密码不正确（连续输错多次会被服务器暂时封禁）': 'Wrong password (too many wrong attempts get you banned by the server for a while)', '无法连接服务器，请稍后再试': 'Cannot reach the server, please try again later',
+    '首页': 'Home', '视频': 'Videos', '图片': 'Images', '音乐': 'Music', '收藏': 'Favourites', '文件夹': 'Folders', '目录': 'Library', '退出登录': 'Log out',
+    '搜索影片、图片、音乐…': 'Search videos, images, music…', '清除': 'Clear', '重新扫描媒体库': 'Reload library', '设置': 'Settings', '已看完': 'Watched', '详情': 'Details', '取消收藏': 'Remove favourite', '文件': 'file',
+    '服务器正在建立媒体索引，暂时只显示部分内容；稍后点右上角的刷新按钮即可看到全部。': 'The server is still indexing your media, so only part of it is shown. Use the reload button at the top right in a moment to see everything.',
+    '继续观看': 'Continue watching', '最新入库': 'Just added', '播放': 'Play', '全部': 'All', '最近添加': 'Recently added', '我的收藏': 'My favourites', '最新图片': 'Latest images',
+    '媒体库是空的': 'The library is empty', '把视频、图片或音乐放进共享文件夹，再点右上角的刷新': 'Put videos, images or music into the shared folder, then press reload at the top right', '欢迎': 'Welcome', '没有找到视频或图片': 'No videos or images found', '可以在“文件夹”里浏览全部文件': 'Browse all files under “Folders”',
+    '（根目录）': '(top level)', '清晰度': 'Resolution', '未知': 'Unknown', '时长': 'Duration', '10 分钟以内': 'Under 10 min', '10–60 分钟': '10–60 min', '1 小时以上': 'Over 1 hour', '年份': 'Year', '格式': 'Format', '无': 'None',
+    '观看状态': 'Status', '未观看': 'Unwatched', '观看中': 'In progress', '最早添加': 'Oldest first', '名称': 'Name', '文件大小': 'File size', '最近观看': 'Last watched',
+    '只看收藏': 'Favourites only', '清除筛选': 'Clear filters', '横版': 'Landscape', '海报': 'Poster', '卡片大小': 'Card size', '试试调整筛选条件或搜索词': 'Try changing the filters or the search words', '其他文件': 'Other files',
+    '还没有收藏': 'No favourites yet', '把鼠标移到任意卡片上，点心形按钮即可收藏': 'Hover any card and press the heart to add it', '搜索': 'Search', '没有找到相关内容': 'Nothing found', '换个关键词试试': 'Try different words',
+    '全部文件': 'All files', '无法打开这个文件夹': 'Cannot open this folder', '它可能已被移动或删除': 'It may have been moved or deleted', '取消全选': 'Select none', '全选': 'Select all', '重命名': 'Rename', '移动到': 'Move to', '复制到': 'Copy to', '下载': 'Download', '删除': 'Delete', '完成': 'Done',
+    '新建文件夹': 'New folder', '上传': 'Upload', '多选管理': 'Select', '打包下载': 'Download as zip', '媒体目录': 'Libraries', '经典界面': 'Classic UI', '添加媒体目录': 'Add a library', '这个文件夹是空的': 'This folder is empty', '把文件拖到这里，或点“上传”': 'Drop files here, or press “Upload”',
+    '取消': 'Cancel', '这里没有子文件夹': 'No subfolders here', '这一层不能存放文件，请进入下面的某个目录。': 'Files cannot be stored at this level; open one of the libraries below.', '影音库会扫描下面这些目录里的全部文件：': 'The wall scans every file in these libraries:', '（共享文件夹本身）': '(the shared folder itself)',
+    '添加或移除目录': 'Adding or removing libraries', '要在运行服务的那台电脑上操作：双击': 'is done on the computer that runs the service: double-click the', '图标 → 选择「管理共享目录」→ 添加文件夹（可一次选多个）。服务会自动重启，新目录扫描完成后就出现在这里。': 'icon → choose “管理共享目录” (manage shared folders) → add folders (several at once is fine). The service restarts by itself and the new library shows up here once it has been scanned.',
+    '出于安全考虑，网页里不能直接添加电脑上的任意文件夹——否则任何知道密码的人都能把那台电脑上的私人文件夹共享出来。': 'For safety, folders cannot be added from the web page — otherwise anyone who knows the password could share private folders of that computer.', '知道了': 'Got it',
+    '没有权限执行这个操作': 'You do not have permission to do this', '创建': 'Create', '名称不能包含斜杠': 'Names cannot contain slashes', '复制到这里': 'Copy here', '移动到这里': 'Move here', '删除确认': 'Confirm delete',
+    '打开': 'Open', '移动到…': 'Move to…', '复制到…': 'Copy to…', '打开所在文件夹': 'Show in folder', '不支持直接拖入文件夹，请拖入文件': 'Folders cannot be dropped; drop files instead',
+    '只让当前窗口出声': 'Sound from the active window only', '自动播放下一集': 'Autoplay next episode', '鼠标悬停时预览': 'Preview on hover', '播放记录': 'Watch history', '导出播放记录和收藏': 'Export history and favourites', '导入播放记录和收藏': 'Import history and favourites', '清除观看记录': 'Clear watch history',
+    '媒体目录（添加 / 移除）': 'Libraries (add / remove)', '经典界面（上传 / 管理）': 'Classic UI (upload / manage)', '观看记录已清除': 'Watch history cleared',
+    '文件名': 'File name', '位置': 'Location', '大小': 'Size', '修改时间': 'Modified', '分辨率': 'Resolution', '视频编码': 'Video codec', '音频编码': 'Audio codec', '帧率': 'Frame rate', '标题': 'Title', '艺术家': 'Artist', '专辑': 'Album', '文件指纹': 'Fingerprint',
+    '关闭': 'Close', '查看': 'View', '继续播放': 'Resume', '从头播放': 'Start over', '删除文件': 'Delete file', '上一个': 'Previous', '下一个': 'Next', '缩小 / 还原': 'Shrink / restore', '铺满页面 / 还原': 'Fill page / restore', '全屏': 'Fullscreen',
+    '浏览器无法播放这个文件': 'The browser cannot play this file', '浏览器不支持这种图片格式。': 'The browser does not support this image format.',
+    '浏览器不支持它的封装或编码格式（常见于 HEVC、AC3/DTS 音轨、AVI、RMVB 等）。可以下载后用本地播放器打开，或复制链接到 IINA / VLC / Infuse 中播放。': 'The browser does not support its container or codec (common with HEVC, AC3/DTS audio, AVI, RMVB…). Download it and use a local player, or copy the link into IINA / VLC / Infuse.',
+    '复制链接': 'Copy link', '这个浏览器不支持全屏': 'This browser does not support fullscreen', '这个浏览器不支持多窗口全屏，已改为平铺': 'This browser cannot put several windows fullscreen; tiled them instead',
+    '平铺所有窗口': 'Tile all windows', '平铺': 'Tile', '全部缩小到角落': 'Shrink all to the corner', '全部缩小': 'Shrink all', '所有窗口一起全屏播放': 'Play all windows fullscreen together', '退出全屏': 'Exit fullscreen', '多窗口全屏': 'Fullscreen all',
+    '当前：只有选中的窗口出声（点击切换为全部出声）': 'Now: only the active window has sound (click for sound from all)', '当前：所有窗口同时出声（点击切换）': 'Now: all windows have sound (click to switch)', '单窗口出声': 'Solo sound', '全部出声': 'All sound',
+    '全部播放 / 暂停': 'Play / pause all', '全部暂停': 'Pause all', '全部播放': 'Play all', '关闭所有窗口': 'Close all windows', '链接已复制': 'Link copied', '只有选中的窗口出声': 'Only the active window has sound', '所有窗口同时出声': 'All windows have sound',
+    '已加入收藏': 'Added to favourites', '已取消收藏': 'Removed from favourites', '刷新失败，请检查网络': 'Reload failed, check the network', '排序方式': 'Sort by', '无法连接服务器': 'Cannot reach the server', '请确认服务已启动，然后刷新页面': 'Make sure the service is running, then reload the page',
+    '导入失败：这不是有效的播放记录文件': 'Import failed: this is not a valid history file', '导入失败：文件里没有播放记录': 'Import failed: the file has no history in it', '收藏': 'Favourite', '切换语言': 'Switch language',
+  };
+  D['收藏'] = 'Favourites';
+  const dur = s => s.replace(/(\d+) 小时/g, '$1 h').replace(/(\d+) 分钟/g, '$1 min').replace(/(\d+) 秒/g, '$1 s');
+  const kind = { '视频': 'videos', '图片': 'images', '音乐': 'music' }, tr = x => D[x] || x, pl = (n, w) => n + ' ' + w + (String(n) === '1' ? '' : 's');
+  const R = [
+    [/^(?:\d+ 小时(?: \d+ 分钟)?|\d+ 分钟|\d+ 秒)$/, m => dur(m[0])],
+    [/^(\d+ 小时(?: \d+ 分钟)?|\d+ 分钟|\d+ 秒)（([\d:]+)）$/, m => dur(m[1]) + ' (' + m[2] + ')'],
+    [/^剩余 (.+)$/, m => dur(m[1]) + ' left'],
+    [/^已看到 ([\d:]+)(?:，剩余 (.+))?$/, m => 'Watched to ' + m[1] + (m[2] ? ', ' + dur(m[2]) + ' left' : '')],
+    [/^从 ([\d:]+) 继续$/, m => 'Resume from ' + m[1]],
+    [/^已从 ([\d:]+) 继续播放$/, m => 'Resumed from ' + m[1]],
+    [/^已选 (\d+) 项$/, m => m[1] + ' selected'],
+    [/^(\d+) 项$/, m => pl(m[1], 'item')],
+    [/^(\d+(?: \/ \d+)?) (部|张|首)$/, m => m[1] + ' ' + ({ '部': 'videos', '张': 'images', '首': 'tracks' })[m[2]]],
+    [/^“(.*)” · (\d+) 个结果$/, m => '“' + m[1] + '” · ' + pl(m[2], 'result')],
+    [/^(.+)（可多选）$/, m => tr(m[1]) + ' (pick any)'],
+    [/^没有符合条件的(视频|图片|音乐)$/, m => 'No matching ' + kind[m[1]]],
+    [/^还没有(视频|图片|音乐)$/, m => 'No ' + kind[m[1]] + ' yet'],
+    [/^(\d+) 个文件夹(?:，(\d+) 个文件)?$/, m => pl(m[1], 'folder') + (m[2] ? ', ' + pl(m[2], 'file') : '')],
+    [/^(\d+) 个文件$/, m => pl(m[1], 'file')],
+    [/^(移动|复制)(?:「(.*)」| (\d+) 项)到…$/, m => (m[1] === '移动' ? 'Move ' : 'Copy ') + (m[3] ? m[3] + ' items' : '“' + m[2] + '”') + ' to…'],
+    [/^已为 (\d+) 个改名或移动过的文件找回播放记录$/, m => 'Recovered the records of ' + pl(m[1], 'renamed or moved file')],
+    [/^已导出 (\d+) 条播放记录、(\d+) 个收藏$/, m => 'Exported ' + pl(m[1], 'watch record') + ' and ' + pl(m[2], 'favourite')],
+    [/^共 (\d+) 条，导入 (\d+) 条(?:，其余 (\d+) 条无效或比本机的旧，已跳过)?(?:；有 (\d+) 个文件的记录自动匹配到了新位置)?$/, m => m[1] + ' in the file, ' + m[2] + ' imported' + (m[3] ? ', ' + m[3] + ' skipped (invalid or older than what is here)' : '') + (m[4] ? '; ' + pl(m[4], 'file') + ' matched to a new location' : '')],
+    [/^已创建 (.+)$/, m => 'Created ' + m[1]],
+    [/^创建失败：(.*)$/, m => 'Could not create: ' + tr(m[1])],
+    [/^已重命名为 (.+)$/, m => 'Renamed to ' + m[1]],
+    [/^重命名失败：(.*)$/, m => 'Could not rename: ' + tr(m[1])],
+    [/^已(复制|移动|删除) (\d+) 项$/, m => ({ '复制': 'Copied ', '移动': 'Moved ', '删除': 'Deleted ' })[m[1]] + pl(m[2], 'item')],
+    [/^已上传 (\d+) 个文件$/, m => 'Uploaded ' + pl(m[1], 'file')],
+    [/^上传完成，(\d+) 个失败$/, m => 'Upload finished, ' + m[1] + ' failed'],
+    [/^正在上传 (\d+) \/ (\d+)：(.*)$/, m => 'Uploading ' + m[1] + ' / ' + m[2] + ': ' + m[3]],
+    [/^正在下载 (\d+) 项，浏览器可能会询问是否允许下载多个文件$/, m => 'Downloading ' + m[1] + ' items; the browser may ask to allow several downloads'],
+    [/^媒体库已刷新，共 (\d+) 个文件$/, m => 'Library reloaded, ' + pl(m[1], 'file')],
+    [/^(\d+) 个窗口$/, m => pl(m[1], 'window')],
+    [/^将永久删除(?:「(.*)」| (\d+) 项)(（其中文件夹会连同里面的全部内容一起删除）)?。此操作无法撤销。$/, m => 'This permanently deletes ' + (m[2] ? m[2] + ' items' : '“' + m[1] + '”') + (m[3] ? ' (folders are deleted together with everything inside them)' : '') + '. It cannot be undone.'],
+  ];
+  const SUB = [['：已经在这个文件夹里', ': already in this folder'], ['：不能放进它自己里面', ': cannot be put inside itself'], ['：没有权限执行这个操作', ': no permission'], [/ 等 (\d+) 项失败/, ' … $1 failed in total'], [/；/g, '; ']];
+  const CJK = /[㐀-鿿]/, SKIP = '.meta .t, .frow .fn, .hero h1, .hero .m .nt, .wt, .dpanel h2, .tops, .crumbs a:not(:first-child), .pfr span:not(.tr), [data-nt], script, style, textarea';
+  function text(s) {
+    const k = s.trim(); if (!k || !CJK.test(k)) return null;
+    let r = D[k];
+    if (r == null) for (const [re, fn] of R) { const m = re.exec(k); if (m) { r = fn(m); break; } }
+    if (r == null) { let x = k; for (const [a, b] of SUB) x = x.replace(a, b); if (x !== k) r = x; }
+    return r == null ? null : s.replace(k, () => r);
+  }
+  function node(n) {
+    if (n.nodeType === 3) { const p = n.parentElement; if (!p || p.closest(SKIP)) return; const r = text(n.nodeValue); if (r != null) n.nodeValue = r; return; }
+    if (n.nodeType !== 1 || n.matches(SKIP)) return;
+    for (const a of ['title', 'placeholder']) { const v = n.getAttribute(a); if (v) { const r = text(v); if (r != null) n.setAttribute(a, r); } }
+    for (let c = n.firstChild; c; c = c.nextSibling) node(c);
+  }
+  function start() {
+    document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-CN';
+    if (LANG !== 'en') return;
+    document.title = D['影音库'];
+    node(document.body);
+    new MutationObserver(ms => {
+      for (const m of ms) {
+        if (m.type === 'childList') m.addedNodes.forEach(node);
+        else if (m.type === 'characterData') node(m.target);
+        else if (m.target.nodeType === 1 && !m.target.closest(SKIP)) { const v = m.target.getAttribute(m.attributeName); if (v) { const r = text(v); if (r != null) m.target.setAttribute(m.attributeName, r); } }
+      }
+    }).observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['title', 'placeholder'] });
+  }
+  return { start, t: s => LANG === 'en' ? (text(s) || s) : s };
+})();
+I18N.start();
+function switchLang() { SET.lang = LANG === 'en' ? 'zh' : 'en'; saveSet(); WM.saveAll(); pushState(true); location.reload(); }
+const langBtn = cls => `<button class="${cls}" data-act="lang" title="切换语言">${LANG === 'en' ? '中文' : 'EN'}</button>`;
+
+
 const ST = lsGet('wall.state', { fav: {}, pos: {} });
 ST.fav = ST.fav || {}; ST.pos = ST.pos || {};
 let pushT = 0, syncOff = false, dirtyState = false;
@@ -363,7 +469,7 @@ function exportState() {
   for (const k of ['fav', 'pos']) for (const p in ST[k]) if (recOn(k, ST[k][p])) { out[k][p] = ST[k][p]; n[k]++; }
   const d = new Date(), stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
   const url = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: 'application/json' }));
-  const a = document.createElement('a'); a.href = url; a.download = '影音库-播放记录-' + stamp + '.json';
+  const a = document.createElement('a'); a.href = url; a.download = (LANG === 'en' ? 'media-wall-history-' : '影音库-播放记录-') + stamp + '.json';
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000);
   toast('已导出 ' + n.pos + ' 条播放记录、' + n.fav + ' 个收藏');
 }
@@ -393,7 +499,7 @@ function showLogin() {
   $('#boot').hidden = true; $('#app').hidden = true;
   const el = $('#login'); el.hidden = false;
   el.innerHTML = `
-    <div class="aur"><i></i><i></i><i></i></div><div class="grid"></div>
+    <div class="aur"><i></i><i></i><i></i></div><div class="grid"></div>${langBtn('langb onlogin')}
     <form class="lcard" autocomplete="on">
       <div class="logo">${PLAY}</div>
       <h1>影音库</h1>
@@ -449,12 +555,13 @@ function renderSide() {
     ${NAV.map(([k, l, i]) => `<a class="nav${cur === k && !(k === 'files' && S.dir) ? ' on' : ''}" href="#/${k}">${ico(i)}<span>${l}</span>${n[k] != null && n[k] ? `<span class="n">${n[k]}</span>` : ''}</a>`).join('')}
     ${S.tops.length ? `<div class="sep"></div><div class="lab">目录</div><div class="tops">${S.tops.map(t => `<a class="nav${S.view === 'files' && (S.dir === t || S.dir.startsWith(t + '/')) ? ' on' : ''}" href="#/files/${enc(t)}">${ico('folder')}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t)}</span></a>`).join('')}</div>` : ''}
     <div class="grow"></div>
-    <div class="who"><div class="av">${esc((S.user || '?').slice(0, 1).toUpperCase())}</div><div class="nm">${esc(S.user)}</div><button class="icb" data-act="logout" title="退出登录">${ico('out')}</button></div>`;
+    <div class="who"><div class="av">${esc((S.user || '?').slice(0, 1).toUpperCase())}</div><div class="nm" data-nt>${esc(S.user)}</div><button class="icb" data-act="logout" title="退出登录">${ico('out')}</button></div>`;
 }
 function renderTop() {
   $('#top').innerHTML = `
     <div class="search">${ico('search')}<input id="q" type="search" placeholder="搜索影片、图片、音乐…" autocomplete="off" spellcheck="false"><button class="icb clr" data-act="clrq" title="清除" hidden>${ico('x')}</button></div>
     <div class="sp"></div>
+    ${langBtn('langb')}
     <button class="icb" data-act="reload" title="重新扫描媒体库">${ico('refresh')}</button>
     <button class="icb" data-act="settings" title="设置">${ico('gear')}</button>`;
   const q = $('#q'); let t = 0;
@@ -510,7 +617,7 @@ function vcard(it, opt) {
       <div class="ov"><b>${PLAY}</b></div>
       <div class="cb"><button class="bi" data-act="info" title="详情">${ico('info')}</button><button class="bf" data-act="fav" title="${fav ? '取消收藏' : '收藏'}">${ico('heart')}</button></div>
     </div>
-    <div class="meta"><div class="t" title="${esc(it.name)}">${esc(it.title)}</div><div class="s">${esc(sub)}</div></div>
+    <div class="meta"><div class="t" title="${esc(it.name)}">${esc(it.title)}</div><div class="s"${opt === 'cont' ? '' : ' data-nt'}>${esc(sub)}</div></div>
   </article>`;
 }
 function icard(it) {
@@ -586,7 +693,7 @@ function viewHome(v) {
       <div class="in">
         <span class="tag">${isC ? ico('clock') + '继续观看' : '最新入库'}</span>
         <h1>${esc(hero.title)}</h1>
-        <div class="m">${hero.year ? `<span>${hero.year}</span>` : ''}${rl ? `<span class="q">${rl}</span>` : ''}${hero.dur ? `<span>${fmtLong(hero.dur)}</span>` : ''}${hero.rel ? `<span>${esc(hero.rel)}</span>` : ''}</div>
+        <div class="m">${hero.year ? `<span>${hero.year}</span>` : ''}${rl ? `<span class="q">${rl}</span>` : ''}${hero.dur ? `<span>${fmtLong(hero.dur)}</span>` : ''}${hero.rel ? `<span class="nt">${esc(hero.rel)}</span>` : ''}</div>
         ${isC ? `<div class="hp"><i style="width:${pct(hero).toFixed(1)}%"></i></div>` : ''}
         <div class="acts">
           <button class="btn pri" data-act="play" data-p="${esc(hero.p)}">${ico('playo', 'f')}${isC ? '从 ' + fmtDur(x.t) + ' 继续' : '播放'}</button>
@@ -640,7 +747,7 @@ function viewWall(k) {
   v.innerHTML = `${noteIdx()}
     <div class="ptitle"><h1>${KN[k][0]}</h1><span>${list.length === total ? total : list.length + ' / ' + total} ${KN[k][2]}</span></div>
     <div class="bar">
-      ${KF[k].map(fk => { const n = f[fk] ? f[fk].size : 0; return `<button class="chip${n ? ' on' : ''}" data-act="filter" data-k="${k}" data-fk="${fk}">${FD[fk].l}${n ? ` <b>${n === 1 ? esc(Array.from(f[fk])[0]) : n}</b>` : ''}${ico('down')}</button>`; }).join('')}
+      ${KF[k].map(fk => { const n = f[fk] ? f[fk].size : 0; return `<button class="chip${n ? ' on' : ''}" data-act="filter" data-k="${k}" data-fk="${fk}">${FD[fk].l}${n ? ` <b${fk === 'top' ? ' data-nt' : ''}>${n === 1 ? esc(Array.from(f[fk])[0]) : n}</b>` : ''}${ico('down')}</button>`; }).join('')}
       <button class="chip${f.fav ? ' on' : ''}" data-act="favonly" data-k="${k}">${ico('heart')}只看收藏</button>
       ${nact ? `<button class="chip" data-act="clearf" data-k="${k}">${ico('x')}清除筛选</button>` : ''}
       <div class="sp"></div>
@@ -666,7 +773,7 @@ function filterPop(anchor, k, fk) {
     if (d.order) keys.sort((a, b) => d.order.indexOf(a) - d.order.indexOf(b));
     else keys.sort((a, b) => a === '未知' ? 1 : b === '未知' ? -1 : d.desc ? b.localeCompare(a) : a.localeCompare(b, 'zh', { numeric: true }));
     const set = f[fk] || new Set();
-    return `<div class="ph">${d.l}（可多选）</div>` + keys.map(x => `<button class="${set.has(x) ? 'on' : ''}" data-v="${esc(x)}"><span class="ck">${ico('check')}</span><span class="lb">${esc(x)}</span><span class="n">${cnt.get(x)}</span></button>`).join('');
+    return `<div class="ph">${d.l}（可多选）</div>` + keys.map(x => `<button class="${set.has(x) ? 'on' : ''}" data-v="${esc(x)}"><span class="ck">${ico('check')}</span><span class="lb"${fk === 'top' && x !== '（根目录）' ? ' data-nt' : ''}>${esc(x)}</span><span class="n">${cnt.get(x)}</span></button>`).join('');
   }, b => {
     const set = f[fk] = f[fk] || new Set(), x = b.dataset.v;
     if (set.has(x)) set.delete(x); else set.add(x);
@@ -796,7 +903,7 @@ function pickFolder(title, start, okLabel) {
 function showLibs() {
   const m = modal(`<h3>媒体目录</h3>
     <p class="mhint" style="margin-top:0">影音库会扫描下面这些目录里的全部文件：</p>
-    <div class="pfl">${(S.roots.length ? S.roots : ['（共享文件夹本身）']).map(n => `<div class="pfr" style="cursor:default">${ico('folder')}<span>${esc(n)}</span></div>`).join('')}</div>
+    <div class="pfl">${(S.roots.length ? S.roots : ['（共享文件夹本身）']).map(n => `<div class="pfr" style="cursor:default">${ico('folder')}<span${S.roots.length ? '' : ' class="tr"'}>${esc(n)}</span></div>`).join('')}</div>
     <p class="mhint"><b>添加或移除目录</b>要在运行服务的那台电脑上操作：双击 <b>Copyparty</b> 图标 → 选择「管理共享目录」→ 添加文件夹（可一次选多个）。服务会自动重启，新目录扫描完成后就出现在这里。</p>
     <p class="mhint">出于安全考虑，网页里不能直接添加电脑上的任意文件夹——否则任何知道密码的人都能把那台电脑上的私人文件夹共享出来。</p>
     <div class="macts"><button class="btn sm acc" data-m="ok">知道了</button></div>`);
@@ -888,7 +995,7 @@ function ctxMenu(x, y, t, it) {
   const el = document.createElement('div'); el.className = 'pop';
   const inFiles = S.view === 'files', canM = !inFiles || S.dirPerms.includes('move'), canD = !inFiles || S.dirPerms.includes('delete');
   const b = (k, ic, l, cls) => `<button data-c="${k}"${cls ? ` class="${cls}"` : ''}>${ico(ic)}<span class="lb">${l}</span></button>`;
-  el.innerHTML = `<div class="ph">${esc(t.name)}</div>` + b('open', t.isDir ? 'folder' : 'playo', '打开') + (it ? b('info', 'info', '详情') + b('fav', 'heart', isFav(it.p) ? '取消收藏' : '收藏') : '') +
+  el.innerHTML = `<div class="ph" data-nt>${esc(t.name)}</div>` + b('open', t.isDir ? 'folder' : 'playo', '打开') + (it ? b('info', 'info', '详情') + b('fav', 'heart', isFav(it.p) ? '取消收藏' : '收藏') : '') +
     b('dl', t.isDir ? 'zip' : 'dl', t.isDir ? '打包下载' : '下载') + '<div class="sep"></div>' +
     (canM ? b('rename', 'edit', '重命名') + b('move', 'move', '移动到…') : '') + b('copy', 'copy', '复制到…') + (!t.isDir ? b('reveal', 'folder', '打开所在文件夹') : '') +
     (canD ? '<div class="sep"></div>' + b('del', 'trash', '删除', 'dng') : '');
@@ -998,7 +1105,7 @@ function showInfo(it) {
         <button class="btn sq" data-act="mv" data-p="${esc(it.p)}" title="移动到…">${ico('move')}</button>
         <button class="btn sq danger" data-act="del" data-p="${esc(it.p)}" title="删除文件">${ico('trash')}</button>
       </div>
-      <dl class="kv">${rows.map(r => `<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join('')}</dl>
+      <dl class="kv">${rows.map(r => `<dt>${r[0]}</dt><dd${['文件名', '位置', '标题', '艺术家', '专辑'].includes(r[0]) ? ' data-nt' : ''}>${esc(r[1])}</dd>`).join('')}</dl>
     </div></aside>`;
   d.hidden = false; d.dataset.p = it.p;
 }
@@ -1115,7 +1222,7 @@ const WM = {
       m.addEventListener('error', () => this.err(w));
       if (it.kind === 'a') {
         w.body.classList.add('au');
-        w.body.innerHTML = `<div class="ad"><div class="ai">${ico('music')}</div><div><b>${esc(it.tt || it.title)}</b><small>${esc([it.artist, it.album].filter(Boolean).join(' · ') || it.rel)}</small></div></div>`;
+        w.body.innerHTML = `<div class="ad"><div class="ai">${ico('music')}</div><div data-nt><b>${esc(it.tt || it.title)}</b><small>${esc([it.artist, it.album].filter(Boolean).join(' · ') || it.rel)}</small></div></div>`;
       }
       m.src = it.url; w.body.appendChild(m);
       if (SET.solo && this.act && this.act !== w) m.muted = false;
@@ -1140,7 +1247,7 @@ const WM = {
   err(w) {
     if ($('.werr', w.el)) return;
     const it = w.item, e = document.createElement('div'); e.className = 'werr';
-    e.innerHTML = `<div><b>浏览器无法播放这个文件</b><p>${esc(it.name)}<br>${it.kind === 'i' ? '浏览器不支持这种图片格式。' : '浏览器不支持它的封装或编码格式（常见于 HEVC、AC3/DTS 音轨、AVI、RMVB 等）。可以下载后用本地播放器打开，或复制链接到 IINA / VLC / Infuse 中播放。'}</p>
+    e.innerHTML = `<div><b>浏览器无法播放这个文件</b><p><span data-nt>${esc(it.name)}</span><br>${it.kind === 'i' ? '浏览器不支持这种图片格式。' : '浏览器不支持它的封装或编码格式（常见于 HEVC、AC3/DTS 音轨、AVI、RMVB 等）。可以下载后用本地播放器打开，或复制链接到 IINA / VLC / Infuse 中播放。'}</p>
       <div class="acts"><a class="btn sm acc" href="${esc(it.url)}" download="${esc(it.name)}">${ico('dl')}下载</a><button class="btn sm" data-w="copy">复制链接</button></div></div>`;
     w.el.appendChild(e);
   },
@@ -1426,6 +1533,7 @@ document.addEventListener('click', e => {
   if (a) {
     const act = a.dataset.act, holder = a.dataset.p ? a : a.closest('[data-p]'), p = holder && holder.dataset.p, it = p && S.map.get(p);
     if (act === 'eye') { const i = $('#lpw'); i.type = i.type === 'password' ? 'text' : 'password'; i.focus(); return; }
+    if (act === 'lang') { switchLang(); return; }
     e.preventDefault();
     if (act === 'fav' && p) toggleFav(p);
     else if (act === 'info' && it) showInfo(it);
